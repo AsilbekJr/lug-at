@@ -107,18 +107,23 @@ export function TodayPage() {
       // 2. Direct save to database (Supabase + localStorage + FSRS Spaced Repetition queue)
       const cefrValue = translation.matchedCuratedWord?.cefr;
       const validCefr = (['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const).find((lvl) => lvl === cefrValue) || 'B1';
-      const posValue = effectiveType === 'sentence' ? 'sentence' : (translation.matchedCuratedWord?.partOfSpeech || 'noun');
+      const posValue = effectiveType === 'sentence'
+        ? 'sentence'
+        : (translation.pos || translation.matchedCuratedWord?.partOfSpeech || 'noun');
 
       const curatedMatch = translation.matchedCuratedWord;
+      const modelSentences = translation.model_sentences;
+
+      // Real contextual sentences from AI or curated dictionary
       const examplePresent = effectiveType === 'sentence'
         ? targetEnglish
-        : (translation.exampleSentence || curatedMatch?.example || `She knows how to use "${targetEnglish}" in daily conversation.`);
+        : (modelSentences?.present || translation.exampleSentence || curatedMatch?.example || `${targetEnglish} plays an important role in daily life.`);
       const examplePast = effectiveType === 'sentence'
         ? targetEnglish
-        : `I learned how to use "${targetEnglish}".`;
+        : (modelSentences?.past || `We noticed ${targetEnglish} in this context.`);
       const exampleFuture = effectiveType === 'sentence'
         ? targetEnglish
-        : `I will remember "${targetEnglish}" for my speaking.`;
+        : (modelSentences?.future || `You will see ${targetEnglish} in future communications.`);
 
       const chunksList = (translation.collocations && translation.collocations.length > 0)
         ? translation.collocations

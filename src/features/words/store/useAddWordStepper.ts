@@ -213,9 +213,9 @@ export const useAddWordStepperStore = create<AddWordStepperState>((set, get) => 
               ? translation.collocations
               : card.chunks),
         model_sentences: {
-          present: curatedInfo?.example || translation.exampleSentence || card.model_sentences?.present || `She knows how to use "${targetEnglish}" in daily conversation.`,
-          past: card.model_sentences?.past || `I learned how to use "${targetEnglish}".`,
-          future: card.model_sentences?.future || `I will remember "${targetEnglish}" for my speaking.`,
+          present: curatedInfo?.example || translation.model_sentences?.present || translation.exampleSentence || card.model_sentences?.present || `It is important to understand ${targetEnglish} in daily conversation.`,
+          past: translation.model_sentences?.past || card.model_sentences?.past || `We analyzed ${targetEnglish} in detail.`,
+          future: translation.model_sentences?.future || card.model_sentences?.future || `You will use ${targetEnglish} effectively.`,
         },
       };
 

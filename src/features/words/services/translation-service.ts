@@ -11,6 +11,11 @@ export interface TranslationResult {
   matchedCuratedWord?: CuratedWord;
   exampleSentence?: string;
   exampleSentenceUz?: string;
+  model_sentences?: {
+    present: string;
+    past: string;
+    future: string;
+  };
   collocations?: string[];
   ipa?: string;
   pos?: string;
@@ -157,6 +162,11 @@ export async function translateInput(
       matchedCuratedWord: curatedMatch,
       exampleSentence: geminiResult.exampleSentence || curatedMatch?.example,
       exampleSentenceUz: geminiResult.exampleSentenceUz || curatedMatch?.exampleUz,
+      model_sentences: geminiResult.model_sentences || (curatedMatch?.example ? {
+        present: curatedMatch.example,
+        past: curatedMatch.example,
+        future: curatedMatch.example,
+      } : undefined),
       collocations: (geminiResult.collocations && geminiResult.collocations.length > 0)
         ? geminiResult.collocations
         : curatedMatch?.collocations,

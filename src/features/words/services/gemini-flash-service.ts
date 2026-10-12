@@ -34,6 +34,11 @@ export interface GeminiTranslateOutput {
   ipa?: string;
   exampleSentence?: string;
   exampleSentenceUz?: string;
+  model_sentences?: {
+    present: string;
+    past: string;
+    future: string;
+  };
   collocations?: string[];
 }
 
@@ -42,19 +47,24 @@ export async function translateWithGeminiFlash(
   targetType?: 'word' | 'sentence'
 ): Promise<GeminiTranslateOutput | null> {
   const prompt = `
-Siz professional ingliz-o'zbek lug'at va til o'qituvchisisiz.
+Siz professional ingliz tili leksikografi va repetitorisiz.
 Quyidagi matn kiritildi: "${inputText}".
+
+Vazifangiz:
 1. Agar matn o'zbekcha bo'lsa, uni tabiiy, chiroyli ingliz tiliga tarjima qiling (englishText).
-2. Agar matn allaqachon inglizcha bo'lsa, o'zbekcha aniq ma'nosini bering (uzbekText).
+2. Agar matn allaqachon inglizcha bo'lsa, uning o'zbekcha aniq ma'nosini bering (uzbekText).
 3. Agar bu so'z yoki ibora bo'lsa (itemType: "word"):
-   - Shu so'z qatnashgan qisqa, tabiiy va tushunarli inglizcha namunaviy gap tuzing (exampleSentence). Misol: "She said hello to her teacher." yoki "We stayed indoors because of the rainy weather."
-   - Ushbu gapning o'zbekcha tarjimasi (exampleSentenceUz).
-   - Shu so'z bilan bog'liq 2-3 ta foydali birikma/collocation (collocations). Misol: ["say hello", "wave hello"].
    - So'z turkumi (pos: noun, verb, adjective, adverb va h.k.) va IPA transkripsiyasi (ipa).
+   - Ushbu so'z tabiiy, jonli va haqiqiy hayotiy kontekstda qo'llangan 3 zamondagi namunaviy gaplar (model_sentences):
+     * present: Hozirgi zamondagi tabiiy jumla (shu so'z qatnashishi SHART, hech qanday sun'iy qolip gaplar MUMKIN EMAS).
+     * past: O'tgan zamondagi tabiiy jumla (shu so'z qatnashishi SHART).
+     * future: Kelasi zamondagi tabiiy jumla (shu so'z qatnashishi SHART).
+   - Namunaviy gapning o'zbekcha tarjimasi (exampleSentenceUz).
+   - 2-3 ta foydali birikma/kolokatsiya (collocations). Misol: ["abandon ship", "abandon a plan"].
 4. Agar bu butun gap bo'lsa (itemType: "sentence"):
-   - exampleSentence ga shu inglizcha gapning o'zini qo'ying.
-   - exampleSentenceUz ga uning o'zbekcha tarjimasini qo'ying.
-   - collocations ga gapdagi asosiy 1-2 ta iborani qo'ying.
+   - model_sentences: { "present": englishText, "past": englishText, "future": englishText }
+   - exampleSentenceUz: uning to'liq o'zbekcha tarjimasi.
+   - collocations: gapdagi asosiy birikmalar.
 
 Faqat va faqat quyidagi toza JSON formatida javob bering:
 {
@@ -63,7 +73,12 @@ Faqat va faqat quyidagi toza JSON formatida javob bering:
   "itemType": "${targetType || 'word'}",
   "pos": "so'z turkumi",
   "ipa": "IPA transkripsiyasi",
-  "exampleSentence": "Shu so'z qatnashgan inglizcha namuna gap",
+  "model_sentences": {
+    "present": "Hozirgi zamondagi tabiiy namuna jumla",
+    "past": "O'tgan zamondagi tabiiy namuna jumla",
+    "future": "Kelasi zamondagi tabiiy namuna jumla"
+  },
+  "exampleSentence": "Hozirgi zamondagi namuna jumla",
   "exampleSentenceUz": "Namuna gapning o'zbekcha tarjimasi",
   "collocations": ["birikma 1", "birikma 2"]
 }
@@ -92,14 +107,23 @@ Faqat va faqat quyidagi toza JSON formatida javob bering:
         const rawJson = data?.choices?.[0]?.message?.content;
         if (rawJson) {
           const parsed = JSON.parse(rawJson);
+          const presentSentence = parsed.model_sentences?.present?.trim() || parsed.exampleSentence?.trim();
+          const pastSentence = parsed.model_sentences?.past?.trim();
+          const futureSentence = parsed.model_sentences?.future?.trim();
+
           return {
             englishText: parsed.englishText?.trim() || inputText,
             uzbekText: parsed.uzbekText?.trim() || inputText,
             itemType: targetType || parsed.itemType || 'word',
             pos: parsed.pos,
             ipa: parsed.ipa,
-            exampleSentence: parsed.exampleSentence?.trim(),
+            exampleSentence: presentSentence,
             exampleSentenceUz: parsed.exampleSentenceUz?.trim(),
+            model_sentences: presentSentence ? {
+              present: presentSentence,
+              past: pastSentence || presentSentence,
+              future: futureSentence || presentSentence,
+            } : undefined,
             collocations: Array.isArray(parsed.collocations) ? parsed.collocations : undefined,
           };
         }
@@ -136,14 +160,23 @@ Faqat va faqat quyidagi toza JSON formatida javob bering:
         const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (rawJson) {
           const parsed = JSON.parse(rawJson);
+          const presentSentence = parsed.model_sentences?.present?.trim() || parsed.exampleSentence?.trim();
+          const pastSentence = parsed.model_sentences?.past?.trim();
+          const futureSentence = parsed.model_sentences?.future?.trim();
+
           return {
             englishText: parsed.englishText?.trim() || inputText,
             uzbekText: parsed.uzbekText?.trim() || inputText,
             itemType: targetType || parsed.itemType || 'word',
             pos: parsed.pos,
             ipa: parsed.ipa,
-            exampleSentence: parsed.exampleSentence?.trim(),
+            exampleSentence: presentSentence,
             exampleSentenceUz: parsed.exampleSentenceUz?.trim(),
+            model_sentences: presentSentence ? {
+              present: presentSentence,
+              past: pastSentence || presentSentence,
+              future: futureSentence || presentSentence,
+            } : undefined,
             collocations: Array.isArray(parsed.collocations) ? parsed.collocations : undefined,
           };
         }
