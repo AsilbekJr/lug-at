@@ -1,7 +1,10 @@
 /**
- * Direct Gemini Flash 2.5 client for translation and memory card enrichment
- * Works seamlessly both with VITE_GEMINI_API_KEY from .env or localStorage.
+ * AI Translation and memory card enrichment client
+ * Primary engine: Groq Qwen (qwen/qwen3.8-27b) - High quota, ultra-fast (~200ms)
+ * Fallback engine: Google Gemini 2.5 Flash
  */
+
+import { getGroqApiKey } from './groq-whisper-service';
 
 const GEMINI_STORAGE_KEY = 'linguist_gemini_api_key';
 
@@ -35,11 +38,6 @@ export async function translateWithGeminiFlash(
   inputText: string,
   targetType?: 'word' | 'sentence'
 ): Promise<GeminiTranslateOutput | null> {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) return null;
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
   const prompt = `
 Siz professional ingliz-o'zbek lug'at va til o'qituvchisisiz.
 Quyidagi matn kiritildi: "${inputText}".
@@ -47,53 +45,93 @@ Agar matn o'zbekcha bo'lsa, uni tabiiy, chiroyli ingliz tiliga tarjima qiling.
 Agar matn allaqachon inglizcha bo'lsa, o'zbekcha aniq tarjimasini bering.
 Agar bu so'z bo'lsa, itemType: "word" qiling. Agar butun gap bo'lsa, itemType: "sentence" qiling.
 
-Faqat va faqat quyidagi toza JSON formatida javob bering, hech qanday markdown yoki qo'shimcha so'z qo'shmang:
+Faqat va faqat quyidagi toza JSON formatida javob bering:
 {
   "englishText": "Inglizcha tarjima yoki asl inglizcha matn",
   "uzbekText": "O'zbekcha ma'nosi yoki asl o'zbekcha matn",
   "itemType": "${targetType || 'word'}",
   "pos": "so'z turkumi (noun, verb, adjective va h.k.)",
-  "ipa": "inglizcha IPA transkripsiyasi (agar so'z bo'lsa)"
+  "ipa": "inglizcha IPA transkripsiyasi"
 }
 `;
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.2,
+  // 1. PRIMARY: GROQ QWEN 27B (Ultra-fast, no quota limit errors)
+  const groqKey = getGroqApiKey();
+  if (groqKey) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${groqKey}`,
+          'Content-Type': 'application/json',
         },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }],
-          },
-        ],
-      }),
-    });
+        body: JSON.stringify({
+          model: 'qwen/qwen3.8-27b',
+          temperature: 0.1,
+          response_format: { type: 'json_object' },
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
 
-    if (!response.ok) {
-      console.warn('Gemini API call returned non-200:', response.status);
-      return null;
+      if (response.ok) {
+        const data = await response.json();
+        const rawJson = data?.choices?.[0]?.message?.content;
+        if (rawJson) {
+          const parsed = JSON.parse(rawJson);
+          return {
+            englishText: parsed.englishText?.trim() || inputText,
+            uzbekText: parsed.uzbekText?.trim() || inputText,
+            itemType: targetType || parsed.itemType || 'word',
+            pos: parsed.pos,
+            ipa: parsed.ipa,
+          };
+        }
+      }
+    } catch (groqErr) {
+      console.warn('Groq Qwen translation failed, trying Gemini:', groqErr);
     }
-
-    const data = await response.json();
-    const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawJson) return null;
-
-    const parsed = JSON.parse(rawJson);
-    return {
-      englishText: parsed.englishText?.trim() || inputText,
-      uzbekText: parsed.uzbekText?.trim() || inputText,
-      itemType: targetType || parsed.itemType || 'word',
-      pos: parsed.pos,
-      ipa: parsed.ipa,
-    };
-  } catch (err) {
-    console.warn('Gemini API fetch error:', err);
-    return null;
   }
+
+  // 2. FALLBACK: GEMINI FLASH 2.5
+  const geminiKey = getGeminiApiKey();
+  if (geminiKey) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (rawJson) {
+          const parsed = JSON.parse(rawJson);
+          return {
+            englishText: parsed.englishText?.trim() || inputText,
+            uzbekText: parsed.uzbekText?.trim() || inputText,
+            itemType: targetType || parsed.itemType || 'word',
+            pos: parsed.pos,
+            ipa: parsed.ipa,
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('Gemini API fetch error:', err);
+    }
+  }
+
+  return null;
 }
