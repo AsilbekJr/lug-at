@@ -310,13 +310,13 @@ export function TodayPage() {
             </p>
           </div>
 
-          {/* TOGGLE: SO'Z / GAP SELECTOR */}
-          <div className="flex items-center gap-2 pt-1">
-            <div className="inline-flex p-0.5 rounded-[6px] bg-surface-subtle border border-border text-xs font-medium">
+          {/* TOGGLE: SO'Z / GAP SELECTOR & MOBILE-AWARE SETTINGS */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div className="inline-flex p-0.5 rounded-[6px] bg-surface-subtle border border-border text-xs font-medium shrink-0">
               <button
                 type="button"
                 onClick={() => setInputItemType('word')}
-                className={`px-3 py-1 rounded-[4px] transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-[4px] text-xs transition-all ${
                   inputItemType === 'word'
                     ? 'bg-paper text-ink font-semibold shadow-2xs'
                     : 'text-ink-muted hover:text-ink'
@@ -327,7 +327,7 @@ export function TodayPage() {
               <button
                 type="button"
                 onClick={() => setInputItemType('sentence')}
-                className={`px-3 py-1 rounded-[4px] transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-[4px] text-xs transition-all ${
                   inputItemType === 'sentence'
                     ? 'bg-paper text-ink font-semibold shadow-2xs'
                     : 'text-ink-muted hover:text-ink'
@@ -337,39 +337,41 @@ export function TodayPage() {
               </button>
             </div>
 
-            {/* Language indicator / switcher for microphone */}
-            {isMicSupported && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Language indicator / switcher for microphone */}
+              {isMicSupported && (
+                <button
+                  type="button"
+                  onClick={toggleMicLang}
+                  title="Mikrofon tili (bosib o‘zgartiring)"
+                  className="px-2 py-1 rounded-[6px] border border-border bg-paper hover:border-accent text-xs font-mono text-ink transition-colors flex items-center gap-1"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  <span>{micLang === 'uz-UZ' ? '🇺🇿 UZ' : '🇬🇧 EN'}</span>
+                </button>
+              )}
+
+              {/* Groq Whisper AI button */}
               <button
                 type="button"
-                onClick={toggleMicLang}
-                title="Mikrofon tili (bosib o‘zgartiring)"
-                className="px-2.5 py-1 rounded-[6px] border border-border bg-paper hover:border-accent text-xs font-mono text-ink transition-colors flex items-center gap-1"
+                onClick={() => setIsGroqModalOpen(true)}
+                title="Groq Whisper sozlamalari"
+                className={`px-2 py-1 rounded-[6px] border text-xs font-mono transition-colors flex items-center gap-1 ${
+                  hasGroqKey
+                    ? 'border-emerald-600/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300'
+                    : 'border-border bg-paper text-ink-muted hover:text-ink hover:border-accent'
+                }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                <span>Ovoz: {micLang === 'uz-UZ' ? '🇺🇿 O‘zbekcha' : '🇬🇧 English'}</span>
+                <KeyRound className="w-3 h-3 text-accent" strokeWidth={1.5} />
+                <span>{hasGroqKey ? '⚡ Groq' : 'Groq STT'}</span>
               </button>
-            )}
-
-            {/* Groq Whisper AI button */}
-            <button
-              type="button"
-              onClick={() => setIsGroqModalOpen(true)}
-              title="Groq Whisper sozlamalari (100% bepul va aniq)"
-              className={`px-2.5 py-1 rounded-[6px] border text-xs font-mono transition-colors flex items-center gap-1 ml-auto ${
-                hasGroqKey
-                  ? 'border-emerald-600/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300'
-                  : 'border-border bg-paper text-ink-muted hover:text-ink hover:border-accent'
-              }`}
-            >
-              <KeyRound className="w-3 h-3 text-accent" strokeWidth={1.5} />
-              <span>{hasGroqKey ? '⚡ Groq Whisper (Faol)' : 'Groq Whisper STT'}</span>
-            </button>
+            </div>
           </div>
 
           {/* ELEMENT 1: TEZKOR INPUT + MIKROFON TUGMASI */}
           <form onSubmit={handleQuickAdd} className="space-y-2">
             <div className="relative flex items-center w-full">
-              <div className="absolute left-3.5 text-ink-muted pointer-events-none">
+              <div className="absolute left-3 text-ink-muted pointer-events-none">
                 <Search className="w-4 h-4" strokeWidth={1.5} />
               </div>
               
@@ -379,14 +381,14 @@ export function TodayPage() {
                 onChange={(e) => setQuickWord(e.target.value)}
                 placeholder={
                   inputItemType === 'word'
-                    ? 'So‘zni yozing... (masalan, sabr-toqat yoki resilience)'
-                    : 'Gapni yozing... (masalan, Men har kuni ertalab yuguraman)'
+                    ? 'So‘zni yozing... (masalan, resilience)'
+                    : 'Gapni yozing... (masalan, Men har kuni yuguraman)'
                 }
-                className="w-full h-13 pl-10 pr-36 sm:pr-36 rounded-[6px] bg-paper border border-border text-ink text-sm sm:text-base placeholder:text-ink-muted/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-2xs truncate"
+                className="w-full h-12 sm:h-13 pl-9 sm:pl-10 pr-28 sm:pr-36 rounded-[6px] bg-paper border border-border text-ink text-sm sm:text-base placeholder:text-ink-muted/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-2xs"
               />
 
               {/* Action buttons inside input right side */}
-              <div className="absolute right-1.5 flex items-center gap-1">
+              <div className="absolute right-1 sm:right-1.5 flex items-center gap-1">
                 {/* Voice Input Button */}
                 {isMicSupported && (
                   <button
@@ -400,7 +402,7 @@ export function TodayPage() {
                         ? 'Tinglanmoqda... To‘xtatish uchun bosing'
                         : `Ovoz orqali aytish (${micLang === 'uz-UZ' ? 'O‘zbekcha' : 'English'})`
                     }
-                    className={`h-10 w-10 rounded-[5px] flex items-center justify-center transition-all ${
+                    className={`h-9 w-9 sm:h-10 sm:w-10 rounded-[5px] flex items-center justify-center transition-all shrink-0 ${
                       isListening
                         ? 'bg-rose-600 text-white animate-pulse shadow-md ring-2 ring-rose-400'
                         : isPreparing
@@ -422,16 +424,13 @@ export function TodayPage() {
                   variant="accent"
                   size="sm"
                   disabled={!quickWord.trim() || isSaving}
-                  className="h-10 px-3.5 text-xs sm:text-sm font-semibold justify-center min-w-[90px]"
+                  className="h-9 sm:h-10 px-2.5 sm:px-3.5 text-xs sm:text-sm font-semibold justify-center shrink-0 min-w-[76px] sm:min-w-[90px]"
                 >
                   {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-1 sm:mr-1.5 animate-spin" />
-                      <span>Saqlanmoqda...</span>
-                    </>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-1 sm:mr-1.5" strokeWidth={1.5} />
+                      <Plus className="w-3.5 h-3.5 mr-1" strokeWidth={1.8} />
                       <span>Qo‘shish</span>
                     </>
                   )}

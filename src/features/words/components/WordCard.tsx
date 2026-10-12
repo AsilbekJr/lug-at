@@ -61,37 +61,37 @@ export function WordCard({ item, onClick, className }: WordCardProps) {
         }
       }}
       className={cn(
-        'group text-left p-5 sm:p-6 rounded-[8px] border border-border bg-paper hover:bg-paper-subtle/60 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+        'group text-left p-4 sm:p-6 rounded-[8px] border border-border bg-paper hover:bg-paper-subtle/60 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         className
       )}
     >
-      <div className="flex items-start justify-between gap-3 mb-2.5">
-        <div className="flex flex-wrap items-baseline gap-2.5">
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="flex flex-wrap items-baseline gap-2 min-w-0 flex-1">
           {/* Target Word in Large Editorial Serif */}
-          <h3 className="font-serif font-bold text-2xl sm:text-3xl text-ink tracking-tight group-hover:text-accent transition-colors">
+          <h3 className="font-serif font-bold text-xl sm:text-2xl text-ink tracking-tight group-hover:text-accent transition-colors break-words">
             {word.word}
           </h3>
 
           {word.ipa && (
-            <span className="font-sans text-xs text-ink-muted tracking-normal">
+            <span className="font-sans text-xs text-ink-muted tracking-normal shrink-0">
               {word.ipa}
             </span>
           )}
 
           {word.pos && (
-            <span className="font-sans text-xs italic text-ink-subtle">
+            <span className="font-sans text-xs italic text-ink-subtle shrink-0">
               {word.pos}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 ml-2">
           <button
             type="button"
             aria-label={`Talaffuz: ${word.word}`}
             onClick={handleSpeak}
             className={cn(
-              'p-2 rounded-[6px] text-ink-muted hover:text-ink hover:bg-paper-subtle min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors',
+              'p-2 rounded-[6px] text-ink-muted hover:text-ink hover:bg-paper-subtle min-h-[40px] min-w-[40px] flex items-center justify-center transition-colors',
               isPlayingAudio && 'text-accent'
             )}
           >
@@ -107,27 +107,27 @@ export function WordCard({ item, onClick, className }: WordCardProps) {
       </div>
 
       {/* Primary Uzbek Meaning */}
-      <p className="font-sans text-sm sm:text-base text-ink leading-relaxed mb-3 reading-measure">
+      <p className="font-sans text-sm sm:text-base text-ink leading-relaxed mb-2.5 reading-measure break-words">
         {word.uz_meaning}
       </p>
 
       {/* Context Reading Sentence */}
       {sentence && (
-        <div className="p-3.5 rounded-[6px] bg-paper-subtle/70 border border-border-subtle my-3">
-          <p className="font-serif italic text-sm text-ink/90 leading-relaxed reading-measure">
+        <div className="p-3 sm:p-3.5 rounded-[6px] bg-paper-subtle/70 border border-border-subtle my-2.5">
+          <p className="font-serif italic text-xs sm:text-sm text-ink/90 leading-relaxed reading-measure break-words">
             "{sentence}"
           </p>
         </div>
       )}
 
       {/* Chunks & Mastery Badges Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 mt-2 border-t border-border-subtle text-xs">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-2 border-t border-border-subtle text-xs">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
           {card?.content?.chunks && card.content.chunks.length > 0 ? (
             card.content.chunks.slice(0, 2).map((chunk, idx) => (
               <span
                 key={idx}
-                className="px-2 py-0.5 rounded-[4px] bg-paper-subtle border border-border-subtle text-ink-muted text-[11px]"
+                className="px-2 py-0.5 rounded-[4px] bg-paper-subtle border border-border-subtle text-ink-muted text-[10px] sm:text-[11px] truncate max-w-[130px] sm:max-w-none"
               >
                 {chunk}
               </span>

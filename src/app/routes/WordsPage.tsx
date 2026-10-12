@@ -77,23 +77,25 @@ export function WordsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto shrink-0">
           <Button
             variant="outline"
             size="md"
             onClick={() => setIsCatalogOpen(true)}
+            className="w-full text-xs sm:text-sm px-2.5 sm:px-4 h-10 justify-center"
           >
-            <Layers className="w-4 h-4 mr-1.5 text-[var(--color-accent)]" strokeWidth={1.5} />
-            Mavzular to‘plami
+            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5 text-[var(--color-accent)] shrink-0" strokeWidth={1.5} />
+            <span className="truncate">Mavzular to‘plami</span>
           </Button>
 
           <Button
             variant="accent"
             size="md"
             onClick={() => openStepper()}
+            className="w-full text-xs sm:text-sm px-2.5 sm:px-4 h-10 justify-center"
           >
-            <Plus className="w-4 h-4 mr-1.5" strokeWidth={1.5} />
-            Yangi so‘z qo‘shish
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5 shrink-0" strokeWidth={1.8} />
+            <span className="truncate">Yangi so‘z</span>
           </Button>
         </div>
       </div>

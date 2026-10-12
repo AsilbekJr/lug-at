@@ -161,7 +161,7 @@ export const CuratedCatalogView: React.FC<CuratedCatalogViewProps> = ({
         </div>
 
         {/* Level Filters */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
           {CEFR_LEVELS.map((lvl) => (
             <button
               key={lvl.id}
@@ -169,7 +169,7 @@ export const CuratedCatalogView: React.FC<CuratedCatalogViewProps> = ({
                 setSelectedLevel(lvl.id);
                 setActiveUnit(null);
               }}
-              className={`px-2.5 py-1 rounded-[6px] text-xs font-medium transition-colors shrink-0 ${
+              className={`px-3 py-1.5 rounded-[6px] text-xs font-medium transition-colors shrink-0 min-h-[36px] ${
                 selectedLevel === lvl.id
                   ? 'bg-[var(--color-accent)] text-white shadow-xs'
                   : 'bg-[var(--color-surface-subtle)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]'
@@ -181,14 +181,14 @@ export const CuratedCatalogView: React.FC<CuratedCatalogViewProps> = ({
         </div>
 
         {/* Source Toggle & Unlearned Filter */}
-        <div className="flex items-center justify-between gap-2 flex-wrap text-xs pt-1">
-          <div className="flex items-center gap-1 bg-[var(--color-surface-subtle)] p-0.5 rounded-[6px] border border-[var(--color-border)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs pt-1">
+          <div className="flex items-center gap-1 bg-[var(--color-surface-subtle)] p-0.5 rounded-[6px] border border-[var(--color-border)] overflow-x-auto max-w-full no-scrollbar">
             <button
               onClick={() => {
                 setSourceType('all');
                 setActiveUnit(null);
               }}
-              className={`px-2 py-0.5 rounded-[4px] font-medium transition-colors ${
+              className={`px-2.5 py-1 min-h-[32px] rounded-[4px] font-medium transition-colors shrink-0 whitespace-nowrap ${
                 sourceType === 'all'
                   ? 'bg-[var(--color-paper)] text-[var(--color-text)] shadow-xs'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -201,7 +201,7 @@ export const CuratedCatalogView: React.FC<CuratedCatalogViewProps> = ({
                 setSourceType('curriculum');
                 setActiveUnit(null);
               }}
-              className={`px-2 py-0.5 rounded-[4px] font-medium transition-colors ${
+              className={`px-2.5 py-1 min-h-[32px] rounded-[4px] font-medium transition-colors shrink-0 whitespace-nowrap ${
                 sourceType === 'curriculum'
                   ? 'bg-[var(--color-paper)] text-[var(--color-text)] shadow-xs'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -214,7 +214,7 @@ export const CuratedCatalogView: React.FC<CuratedCatalogViewProps> = ({
                 setSourceType('topics');
                 setActiveUnit(null);
               }}
-              className={`px-2 py-0.5 rounded-[4px] font-medium transition-colors ${
+              className={`px-2.5 py-1 min-h-[32px] rounded-[4px] font-medium transition-colors shrink-0 whitespace-nowrap ${
                 sourceType === 'topics'
                   ? 'bg-[var(--color-paper)] text-[var(--color-text)] shadow-xs'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -224,12 +224,12 @@ export const CuratedCatalogView: React.FC<CuratedCatalogViewProps> = ({
             </button>
           </div>
 
-          <label className="flex items-center gap-1.5 cursor-pointer select-none text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+          <label className="flex items-center gap-2 cursor-pointer select-none text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-1 min-h-[36px]">
             <input
               type="checkbox"
               checked={onlyUnlearned}
               onChange={(e) => setOnlyUnlearned(e.target.checked)}
-              className="rounded-[4px] border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+              className="rounded-[4px] border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)] w-4 h-4"
             />
             <span>Faqat o‘rganilmagan so‘zlar</span>
           </label>
@@ -264,22 +264,22 @@ export const CuratedCatalogView: React.FC<CuratedCatalogViewProps> = ({
         ) : activeUnit ? (
           /* Mode B: Inside a Selected Topic / Day */
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-[var(--color-border)]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[var(--color-border)]">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveUnit(null)}
-                className="text-xs h-8 px-2 text-[var(--color-text-muted)]"
+                className="text-xs h-9 min-h-[36px] px-2 text-[var(--color-text-muted)] w-fit"
               >
                 <ArrowLeft className="w-3.5 h-3.5 mr-1" />
                 Mavzular ro‘yxatiga qaytish
               </Button>
 
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-sm text-[var(--color-text)]">
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <span className="font-serif font-bold text-sm text-[var(--color-text)] truncate max-w-[220px] sm:max-w-none">
                   {activeUnit.title}
                 </span>
-                <Badge variant="outline" className="text-[10px] font-mono">
+                <Badge variant="outline" className="text-[10px] font-mono shrink-0">
                   {activeUnit.cefr}
                 </Badge>
               </div>

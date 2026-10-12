@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client';
 import { Header } from '@/components/layout/header';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { TodayPage } from '@/app/routes/TodayPage';
 import { WordsPage } from '@/app/routes/WordsPage';
 import { ReviewPage } from '@/app/routes/ReviewPage';
@@ -24,7 +25,7 @@ function AppLayout() {
     <div className="min-h-screen bg-paper text-ink flex flex-col font-sans selection:bg-accent-subtle selection:text-ink">
       <Header onOpenAddWord={() => setIsAddWordOpen(true)} />
       
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-24 sm:pb-16">
         <Routes>
           <Route path="/" element={<TodayPage />} />
           <Route path="/words" element={<WordsPage />} />
@@ -33,6 +34,9 @@ function AppLayout() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      {/* Modern Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
       {/* Global Add Word Dialog triggered from Header */}
       <AddWordDialog

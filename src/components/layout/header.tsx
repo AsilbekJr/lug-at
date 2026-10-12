@@ -62,14 +62,14 @@ export function Header({ onOpenAddWord }: HeaderProps) {
           </span>
         </Link>
 
-        {/* Navigation */}
-        <nav className="flex items-center gap-0.5 sm:gap-2">
+        {/* Navigation - Desktop */}
+        <nav className="hidden sm:flex items-center gap-1 sm:gap-2">
           <NavLink
             to="/"
             end
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-1 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-[6px] min-h-[44px] transition-colors',
+                'flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-[6px] min-h-[44px] transition-colors',
                 isActive
                   ? 'bg-paper-muted text-ink font-semibold'
                   : 'text-ink-muted hover:text-ink hover:bg-paper-subtle'
@@ -83,14 +83,14 @@ export function Header({ onOpenAddWord }: HeaderProps) {
             to="/words"
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-1.5 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-[6px] min-h-[44px] transition-colors',
+                'flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-[6px] min-h-[44px] transition-colors',
                 isActive
                   ? 'bg-paper-muted text-ink font-semibold'
                   : 'text-ink-muted hover:text-ink hover:bg-paper-subtle'
               )
             }
           >
-            <BookOpen className="w-4 h-4 hidden sm:inline" strokeWidth={1.5} />
+            <BookOpen className="w-4 h-4" strokeWidth={1.5} />
             <span>Lug‘at</span>
           </NavLink>
 
@@ -98,17 +98,17 @@ export function Header({ onOpenAddWord }: HeaderProps) {
             to="/review"
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-1 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-[6px] min-h-[44px] transition-colors relative',
+                'flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-[6px] min-h-[44px] transition-colors relative',
                 isActive
                   ? 'bg-paper-muted text-ink font-semibold'
                   : 'text-ink-muted hover:text-ink hover:bg-paper-subtle'
               )
             }
           >
-            <Layers className="w-4 h-4 hidden sm:inline" strokeWidth={1.5} />
+            <Layers className="w-4 h-4" strokeWidth={1.5} />
             <span>Takrorlash</span>
             {dueCount > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.2 text-[10px] sm:text-[11px] font-mono font-semibold rounded-full bg-accent text-white">
+              <span className="ml-1 px-1.5 py-0.2 text-[11px] font-mono font-semibold rounded-full bg-accent text-white">
                 {dueCount}
               </span>
             )}
@@ -118,29 +118,29 @@ export function Header({ onOpenAddWord }: HeaderProps) {
             to="/stats"
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-1.5 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-[6px] min-h-[44px] transition-colors',
+                'flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-[6px] min-h-[44px] transition-colors',
                 isActive
                   ? 'bg-paper-muted text-ink font-semibold'
                   : 'text-ink-muted hover:text-ink hover:bg-paper-subtle'
               )
             }
           >
-            <BarChart3 className="w-4 h-4 hidden sm:inline" strokeWidth={1.5} />
+            <BarChart3 className="w-4 h-4" strokeWidth={1.5} />
             <span>Statistika</span>
           </NavLink>
         </nav>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {onOpenAddWord && (
             <Button
               variant="accent"
               size="sm"
               onClick={onOpenAddWord}
-              className="hidden sm:flex"
+              className="h-9 px-2.5 sm:px-3.5 text-xs sm:text-sm font-semibold flex items-center gap-1 shrink-0"
             >
-              <Plus className="w-4 h-4 mr-1" strokeWidth={1.5} />
-              Yangi so'z
+              <Plus className="w-4 h-4" strokeWidth={1.8} />
+              <span className="hidden xs:inline">Yangi so‘z</span>
             </Button>
           )}
 

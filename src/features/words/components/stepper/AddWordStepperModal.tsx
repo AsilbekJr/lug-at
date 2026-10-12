@@ -290,7 +290,8 @@ export const AddWordStepperModal: React.FC = () => {
                     ) : (
                       <>
                         <Check className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
-                        Lug‘atga saqlash va FSRSni boshlash
+                        <span className="hidden sm:inline">Lug‘atga saqlash va FSRSni boshlash</span>
+                        <span className="sm:hidden">Lug‘atga saqlash</span>
                       </>
                     )}
                   </Button>

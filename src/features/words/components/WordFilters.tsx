@@ -33,32 +33,37 @@ export function WordFilters({
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="So'z, ta'rif yoki o'zbekcha tarjimani qidirish..."
+            placeholder="So'z, ta'rif yoki tarjima qidirish..."
             className="w-full h-10 min-h-[44px] pl-10 pr-4 text-sm bg-paper text-ink border border-border rounded-[6px] placeholder:text-ink-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-colors"
           />
         </div>
 
-        {/* Sort Selector */}
-        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-          <label htmlFor="sort-select" className="text-xs text-ink-muted flex items-center gap-1">
-            <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={1.5} />
-            <span className="hidden sm:inline">Saralash:</span>
-          </label>
-          <select
-            id="sort-select"
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value as 'latest' | 'alphabetical' | 'level')}
-            className="h-10 min-h-[44px] px-3 py-1.5 text-xs font-medium bg-paper border border-border rounded-[6px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
-          >
-            <option value="latest">So'nggi qo'shilganlar</option>
-            <option value="alphabetical">Alifbo bo'yicha (A-Z)</option>
-            <option value="level">CEFR darajasi bo'yicha</option>
-          </select>
+        {/* Sort Selector & mobile count */}
+        <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+          <span className="text-xs text-ink-muted sm:hidden">
+            Jami: <strong className="text-ink font-semibold">{totalCount}</strong> ta so'z
+          </span>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort-select" className="text-xs text-ink-muted flex items-center gap-1">
+              <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Saralash:</span>
+            </label>
+            <select
+              id="sort-select"
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value as 'latest' | 'alphabetical' | 'level')}
+              className="h-10 min-h-[44px] px-3 py-1.5 text-xs font-medium bg-paper border border-border rounded-[6px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
+            >
+              <option value="latest">So'nggi qo'shilganlar</option>
+              <option value="alphabetical">Alifbo bo'yicha (A-Z)</option>
+              <option value="level">CEFR darajasi bo'yicha</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* CEFR Level Pills */}
-      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="flex items-center gap-1.5 shrink-0">
           {CEFR_OPTIONS.map((lvl) => {
             const isSelected = selectedCefr === lvl;
