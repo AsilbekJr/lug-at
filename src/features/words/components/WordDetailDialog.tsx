@@ -214,7 +214,9 @@ export function WordDetailDialog({
                   <div>
                     <span className="font-semibold text-accent font-mono text-[10px] block">Hozirgi:</span>
                     <p className="font-serif italic text-sm text-ink leading-relaxed">
-                      "{modelSentences.present}"
+                      "{modelSentences.present.trim().toLowerCase() === word.word.trim().toLowerCase()
+                        ? `She knows how to use "${word.word}" in daily conversation.`
+                        : modelSentences.present}"
                     </p>
                   </div>
                 )}
@@ -222,7 +224,9 @@ export function WordDetailDialog({
                   <div>
                     <span className="font-semibold text-ink-muted font-mono text-[10px] block">O‘tgan:</span>
                     <p className="font-serif italic text-sm text-ink leading-relaxed">
-                      "{modelSentences.past}"
+                      "{modelSentences.past.trim().toLowerCase() === word.word.trim().toLowerCase()
+                        ? `I learned how to use "${word.word}".`
+                        : modelSentences.past}"
                     </p>
                   </div>
                 )}
@@ -230,7 +234,9 @@ export function WordDetailDialog({
                   <div>
                     <span className="font-semibold text-ink-muted font-mono text-[10px] block">Kelasi:</span>
                     <p className="font-serif italic text-sm text-ink leading-relaxed">
-                      "{modelSentences.future}"
+                      "{modelSentences.future.trim().toLowerCase() === word.word.trim().toLowerCase()
+                        ? `I will remember "${word.word}" for my speaking.`
+                        : modelSentences.future}"
                     </p>
                   </div>
                 )}

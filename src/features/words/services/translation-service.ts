@@ -9,6 +9,11 @@ export interface TranslationResult {
   uzbekText: string;
   itemType: 'word' | 'sentence';
   matchedCuratedWord?: CuratedWord;
+  exampleSentence?: string;
+  exampleSentenceUz?: string;
+  collocations?: string[];
+  ipa?: string;
+  pos?: string;
 }
 
 // Build fast lookup dictionary from 4713 curated words
@@ -138,14 +143,25 @@ export async function translateInput(
   const isUz = isLikelyUzbek(text);
   const lower = text.toLowerCase();
 
-  // 1. Try Gemini Flash if API key is provided
+  // 1. Try Gemini Flash / Groq Qwen
   const geminiResult = await translateWithGeminiFlash(text, forcedItemType);
   if (geminiResult) {
+    // If exact curated match exists, use its extra details if AI omitted them
+    const curatedMatch = isUz ? uzToEnMap.get(lower) : enToUzMap.get(lower);
+
     return {
       detectedLang: isUz ? 'uz' : 'en',
       englishText: geminiResult.englishText,
       uzbekText: geminiResult.uzbekText,
       itemType: geminiResult.itemType,
+      matchedCuratedWord: curatedMatch,
+      exampleSentence: geminiResult.exampleSentence || curatedMatch?.example,
+      exampleSentenceUz: geminiResult.exampleSentenceUz || curatedMatch?.exampleUz,
+      collocations: (geminiResult.collocations && geminiResult.collocations.length > 0)
+        ? geminiResult.collocations
+        : curatedMatch?.collocations,
+      ipa: geminiResult.ipa || curatedMatch?.phonetic,
+      pos: geminiResult.pos || curatedMatch?.partOfSpeech,
     };
   }
 
@@ -159,6 +175,11 @@ export async function translateInput(
         uzbekText: curated.translation,
         itemType: 'word',
         matchedCuratedWord: curated,
+        exampleSentence: curated.example,
+        exampleSentenceUz: curated.exampleUz,
+        collocations: curated.collocations,
+        ipa: curated.phonetic,
+        pos: curated.partOfSpeech,
       };
     }
 
@@ -170,6 +191,8 @@ export async function translateInput(
         englishText: COMMON_SENTENCES[normalizedKey],
         uzbekText: text,
         itemType: 'sentence',
+        exampleSentence: COMMON_SENTENCES[normalizedKey],
+        exampleSentenceUz: text,
       };
     }
 
@@ -184,6 +207,11 @@ export async function translateInput(
             uzbekText: text,
             itemType: 'word',
             matchedCuratedWord: curatedWord,
+            exampleSentence: curatedWord.example,
+            exampleSentenceUz: curatedWord.exampleUz,
+            collocations: curatedWord.collocations,
+            ipa: curatedWord.phonetic,
+            pos: curatedWord.partOfSpeech,
           };
         }
       }
@@ -194,6 +222,8 @@ export async function translateInput(
         englishText: text,
         uzbekText: text,
         itemType: 'word',
+        exampleSentence: `I practice the word "${text}" every day.`,
+        collocations: [`learn ${text}`],
       };
     } else {
       // Sentence in Uzbek
@@ -202,6 +232,8 @@ export async function translateInput(
         englishText: text,
         uzbekText: text,
         itemType: 'sentence',
+        exampleSentence: text,
+        exampleSentenceUz: text,
       };
     }
   } else {
@@ -214,6 +246,11 @@ export async function translateInput(
         uzbekText: curated.translation,
         itemType: 'word',
         matchedCuratedWord: curated,
+        exampleSentence: curated.example,
+        exampleSentenceUz: curated.exampleUz,
+        collocations: curated.collocations,
+        ipa: curated.phonetic,
+        pos: curated.partOfSpeech,
       };
     }
 
@@ -222,6 +259,8 @@ export async function translateInput(
       englishText: text,
       uzbekText: `${text} (inglizcha)`,
       itemType,
+      exampleSentence: itemType === 'sentence' ? text : `She uses the word "${text}" correctly.`,
+      collocations: [`practice ${text}`],
     };
   }
 }

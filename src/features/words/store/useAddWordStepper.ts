@@ -204,12 +204,19 @@ export const useAddWordStepperStore = create<AddWordStepperState>((set, get) => 
       // Enhance with curated data if available
       const mergedCard: CardOutput = {
         ...card,
-        ipa: card.ipa || curatedInfo?.phonetic || translation.matchedCuratedWord?.phonetic || '',
+        ipa: card.ipa || curatedInfo?.phonetic || translation.matchedCuratedWord?.phonetic || translation.ipa || '',
         uz_meaning: curatedInfo?.translation || translation.matchedCuratedWord?.translation || uzMeaning || card.uz_meaning,
         chunks:
           curatedInfo?.collocations && curatedInfo.collocations.length > 0
             ? curatedInfo.collocations
-            : card.chunks,
+            : ((translation.collocations && translation.collocations.length > 0)
+              ? translation.collocations
+              : card.chunks),
+        model_sentences: {
+          present: curatedInfo?.example || translation.exampleSentence || card.model_sentences?.present || `She knows how to use "${targetEnglish}" in daily conversation.`,
+          past: card.model_sentences?.past || `I learned how to use "${targetEnglish}".`,
+          future: card.model_sentences?.future || `I will remember "${targetEnglish}" for my speaking.`,
+        },
       };
 
       const availableMnemonics = (mergedCard.mnemonics || []).filter(

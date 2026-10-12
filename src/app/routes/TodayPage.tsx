@@ -109,29 +109,49 @@ export function TodayPage() {
       const validCefr = (['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const).find((lvl) => lvl === cefrValue) || 'B1';
       const posValue = effectiveType === 'sentence' ? 'sentence' : (translation.matchedCuratedWord?.partOfSpeech || 'noun');
 
+      const curatedMatch = translation.matchedCuratedWord;
+      const examplePresent = effectiveType === 'sentence'
+        ? targetEnglish
+        : (translation.exampleSentence || curatedMatch?.example || `She knows how to use "${targetEnglish}" in daily conversation.`);
+      const examplePast = effectiveType === 'sentence'
+        ? targetEnglish
+        : `I learned how to use "${targetEnglish}".`;
+      const exampleFuture = effectiveType === 'sentence'
+        ? targetEnglish
+        : `I will remember "${targetEnglish}" for my speaking.`;
+
+      const chunksList = (translation.collocations && translation.collocations.length > 0)
+        ? translation.collocations
+        : ((curatedMatch?.collocations && curatedMatch.collocations.length > 0)
+          ? curatedMatch.collocations
+          : [`${targetEnglish} — ${uzMeaning}`]);
+      const ipaValue = translation.ipa || curatedMatch?.phonetic || '';
+
       await createWordMutation.mutateAsync({
         word: targetEnglish,
         pos: posValue,
-        ipa: translation.matchedCuratedWord?.phonetic || '',
+        ipa: ipaValue,
         uz_meaning: uzMeaning,
         item_type: effectiveType,
         cardContent: {
           word: targetEnglish,
           pos: posValue,
-          ipa: translation.matchedCuratedWord?.phonetic || '',
+          ipa: ipaValue,
           uz_meaning: uzMeaning,
           item_type: effectiveType,
-          chunks: [`${targetEnglish} — ${uzMeaning}`],
+          chunks: chunksList,
           mnemonics: [
             {
               type: 'image',
-              scene_uz: `Eslab qolish: "${targetEnglish}" — ${uzMeaning}`,
+              scene_uz: translation.exampleSentenceUz
+                ? `Namuna: "${examplePresent}" — ${translation.exampleSentenceUz}`
+                : `Eslab qolish: "${targetEnglish}" — ${uzMeaning}`,
             },
           ],
           model_sentences: {
-            present: targetEnglish,
-            past: targetEnglish,
-            future: targetEnglish,
+            present: examplePresent,
+            past: examplePast,
+            future: exampleFuture,
           },
           personal_prompt_uz: `${targetEnglish} bilan bog‘liq vaziyatni tasvirlang`,
           cefr_level: validCefr,

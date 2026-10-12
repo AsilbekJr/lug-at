@@ -38,7 +38,13 @@ export function WordCard({ item, onClick, className }: WordCardProps) {
 
   const srsInfo = stateLabels[userWord.state];
   const cefr = card?.content?.cefr_level;
-  const sentence = card?.content?.model_sentences?.present || userWord.own_sentence;
+  const rawSentence = card?.content?.model_sentences?.present || userWord.own_sentence;
+  const isJustWord = rawSentence ? rawSentence.trim().toLowerCase() === word.word.trim().toLowerCase() : false;
+  const sentence = !rawSentence || isJustWord
+    ? (card?.content?.model_sentences?.past && card.content.model_sentences.past.trim().toLowerCase() !== word.word.trim().toLowerCase()
+        ? card.content.model_sentences.past
+        : `She knows how to use "${word.word}" in daily conversation.`)
+    : rawSentence;
 
   return (
     <article
