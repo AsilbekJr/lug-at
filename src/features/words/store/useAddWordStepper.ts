@@ -143,6 +143,7 @@ export const useAddWordStepperStore = create<AddWordStepperState>((set, get) => 
     }
 
     set({
+      isOpen: true,
       isLoadingCard: true,
       error: null,
       wordInput: cleanInput,

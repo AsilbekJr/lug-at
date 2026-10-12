@@ -24,15 +24,18 @@ import {
   Search,
   BookOpen,
   KeyRound,
+  Loader2,
 } from 'lucide-react';
 import { useSpeech } from '@/features/words/hooks/use-speech';
 import { useSpeechRecognition } from '@/features/words/hooks/use-speech-recognition';
 import { CuratedVocabModal } from '@/features/words/components/curriculum/CuratedVocabModal';
 import { getGroqApiKey, setGroqApiKey } from '@/features/words/services/groq-whisper-service';
+import { useCreateWordMutation } from '@/features/words/api/words-api';
+import { translateInput } from '@/features/words/services/translation-service';
 
 export function TodayPage() {
   const navigate = useNavigate();
-  const { startFlowWithWord, openStepper, openWithCuratedWord } = useAddWordStepperStore();
+  const { openStepper, openWithCuratedWord } = useAddWordStepperStore();
   const { speak } = useSpeech();
   const { curriculumDays, isWordLearned } = useCurriculum();
 
@@ -75,12 +78,81 @@ export function TodayPage() {
     }
   };
 
+  const createWordMutation = useCreateWordMutation();
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [saveFeedback, setSaveFeedback] = React.useState<{
+    text: string;
+    en: string;
+    uz: string;
+    type: 'word' | 'sentence';
+  } | null>(null);
+
   const handleQuickAdd = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (quickWord.trim()) {
-      if (isListening) stopListening();
-      await startFlowWithWord(quickWord.trim(), undefined, inputItemType);
+    const query = quickWord.trim();
+    if (!query) return;
+
+    if (isListening || isPreparing) stopListening();
+
+    setIsSaving(true);
+    setSaveFeedback(null);
+
+    try {
+      // 1. Auto-translate with Groq Qwen / Curated dictionary
+      const translation = await translateInput(query, inputItemType);
+      const effectiveType = inputItemType || translation.itemType || 'word';
+      const targetEnglish = translation.englishText;
+      const uzMeaning = translation.uzbekText;
+
+      // 2. Direct save to database (Supabase + localStorage + FSRS Spaced Repetition queue)
+      const cefrValue = translation.matchedCuratedWord?.cefr;
+      const validCefr = (['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const).find((lvl) => lvl === cefrValue) || 'B1';
+      const posValue = effectiveType === 'sentence' ? 'sentence' : (translation.matchedCuratedWord?.partOfSpeech || 'noun');
+
+      await createWordMutation.mutateAsync({
+        word: targetEnglish,
+        pos: posValue,
+        ipa: translation.matchedCuratedWord?.phonetic || '',
+        uz_meaning: uzMeaning,
+        item_type: effectiveType,
+        cardContent: {
+          word: targetEnglish,
+          pos: posValue,
+          ipa: translation.matchedCuratedWord?.phonetic || '',
+          uz_meaning: uzMeaning,
+          item_type: effectiveType,
+          chunks: [`${targetEnglish} — ${uzMeaning}`],
+          mnemonics: [
+            {
+              type: 'image',
+              scene_uz: `Eslab qolish: "${targetEnglish}" — ${uzMeaning}`,
+            },
+          ],
+          model_sentences: {
+            present: targetEnglish,
+            past: targetEnglish,
+            future: targetEnglish,
+          },
+          personal_prompt_uz: `${targetEnglish} bilan bog‘liq vaziyatni tasvirlang`,
+          cefr_level: validCefr,
+        },
+        recog_ok: true,
+        listen_ok: true,
+        write_ok: true,
+        speak_ok: true,
+      });
+
+      setSaveFeedback({
+        text: query,
+        en: targetEnglish,
+        uz: uzMeaning,
+        type: effectiveType,
+      });
       setQuickWord('');
+    } catch (err) {
+      console.error('So‘zni saqlashda xatolik:', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -324,14 +396,46 @@ export function TodayPage() {
                   type="submit"
                   variant="accent"
                   size="sm"
-                  disabled={!quickWord.trim()}
-                  className="h-10 px-3.5 text-xs sm:text-sm font-semibold justify-center"
+                  disabled={!quickWord.trim() || isSaving}
+                  className="h-10 px-3.5 text-xs sm:text-sm font-semibold justify-center min-w-[90px]"
                 >
-                  <Plus className="w-4 h-4 mr-1 sm:mr-1.5" strokeWidth={1.5} />
-                  <span>Qo‘shish</span>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 sm:mr-1.5 animate-spin" />
+                      <span>Saqlanmoqda...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-1 sm:mr-1.5" strokeWidth={1.5} />
+                      <span>Qo‘shish</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
+
+            {/* Save Success Banner */}
+            {saveFeedback && (
+              <div className="flex items-center justify-between p-3 rounded-[6px] bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-600/30 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm transition-all animate-fade-in shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="font-semibold text-ink">"{saveFeedback.en}"</span>
+                    <span className="text-ink-muted text-xs">({saveFeedback.uz})</span>
+                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-mono">
+                      {saveFeedback.type === 'sentence' ? 'Gap' : 'So‘z'} saqlandi!
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/words')}
+                  className="text-accent hover:underline text-xs font-semibold shrink-0 ml-3"
+                >
+                  Lug‘atda ko‘rish →
+                </button>
+              </div>
+            )}
 
             {/* Preparing indicator */}
             {isPreparing && (
