@@ -48,6 +48,7 @@ export interface UseSpeechRecognitionOptions {
 export interface UseSpeechRecognitionReturn {
   isSupported: boolean;
   isListening: boolean;
+  isPreparing: boolean;
   isTranscribing: boolean;
   transcript: string;
   errorMessage: string | null;
@@ -66,6 +67,7 @@ export function useSpeechRecognition(
 
   const [lang, setLang] = React.useState<SpeechLang>(initialLang);
   const [isListening, setIsListening] = React.useState(false);
+  const [isPreparing, setIsPreparing] = React.useState(false);
   const [isTranscribing, setIsTranscribing] = React.useState(false);
   const [transcript, setTranscript] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -117,16 +119,19 @@ export function useSpeechRecognition(
       instance.lang = lang;
 
       instance.onstart = () => {
+        setIsPreparing(false);
         setIsListening(true);
         setErrorMessage(null);
       };
 
       instance.onend = () => {
         setIsListening(false);
+        setIsPreparing(false);
       };
 
       instance.onerror = (e) => {
         setIsListening(false);
+        setIsPreparing(false);
         let userFriendlyError = 'Ovozni aniqlashda xatolik yuz berdi.';
         if (e.error === 'not-allowed') {
           userFriendlyError = 'Mikrofon ruxsati berilmagan. Brauzerda mikrofonga ruxsat bering.';
@@ -137,7 +142,7 @@ export function useSpeechRecognition(
         onErrorRef.current?.(userFriendlyError);
       };
 
-      instance.onresult = (e: SpeechRecognitionEventLike) => {
+      instance.onresult = async (e: SpeechRecognitionEventLike) => {
         let fullAccumulated = '';
         for (let i = 0; i < e.results.length; ++i) {
           const chunk = e.results[i]?.[0]?.transcript || '';
@@ -149,6 +154,19 @@ export function useSpeechRecognition(
           const cleaned = cleanSpokenTranscript(raw);
           setTranscript(cleaned);
           onResultRef.current?.(cleaned);
+
+          // If speech is final, pass through Gemini to immediately fix any Turkish/phonetic errors
+          const lastItem = e.results[e.results.length - 1];
+          if (lastItem?.isFinal) {
+            setIsTranscribing(true);
+            try {
+              const perfected = await normalizeSpeechWithAI(cleaned, lang);
+              setTranscript(perfected);
+              onResultRef.current?.(perfected);
+            } finally {
+              setIsTranscribing(false);
+            }
+          }
         }
       };
 
@@ -161,6 +179,7 @@ export function useSpeechRecognition(
   const startListening = React.useCallback(async () => {
     setErrorMessage(null);
     setTranscript('');
+    setIsPreparing(true);
 
     const groqKey = getGroqApiKey();
 
@@ -196,11 +215,13 @@ export function useSpeechRecognition(
         };
 
         recorder.onstart = () => {
+          setIsPreparing(false);
           setIsListening(true);
         };
 
         recorder.onstop = async () => {
           setIsListening(false);
+          setIsPreparing(false);
           setIsTranscribing(true);
 
           // Stop all stream tracks
@@ -210,15 +231,11 @@ export function useSpeechRecognition(
           }
 
           const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-          if (audioBlob.size > 1000) {
+          if (audioBlob.size > 100) {
             try {
               const whisperResult = await transcribeAudioWithGroq({
                 audioBlob,
                 language: lang === 'uz-UZ' ? 'uz' : 'en',
-                prompt:
-                  lang === 'uz-UZ'
-                    ? 'O‘zbek adabiy tili: havo judayam sovuq, havo sovuq, havo issiq, yaxshi, sabr-toqat, kitob, talaba, yuguraman.'
-                    : 'English speech: resilience, weather, cold, meticulously, conversation.',
               });
 
               if (whisperResult) {
@@ -238,9 +255,10 @@ export function useSpeechRecognition(
           setIsTranscribing(false);
         };
 
-        recorder.start(250); // collect chunks every 250ms
+        recorder.start(100); // collect chunks every 100ms for zero dropped words
         return;
       } catch (err) {
+        setIsPreparing(false);
         console.warn('Failed to start MediaRecorder for Groq:', err);
         // Fall back to Web Speech
       }
@@ -278,13 +296,26 @@ export function useSpeechRecognition(
   }, [createWebSpeech, lang]);
 
   const stopListening = React.useCallback(() => {
-    // Stop MediaRecorder if running
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    setIsListening(false);
+    setIsPreparing(false);
+
+    // Stop MediaRecorder if running, with 350ms cushion to capture trailing syllables
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       try {
-        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.requestData();
       } catch {
         // ignore
       }
+      setTimeout(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          try {
+            mediaRecorderRef.current.stop();
+          } catch {
+            // ignore
+          }
+        }
+      }, 350);
+      return;
     }
 
     // Stop Web Speech if running
@@ -295,8 +326,6 @@ export function useSpeechRecognition(
         // ignore
       }
     }
-
-    setIsListening(false);
   }, []);
 
   const resetTranscript = React.useCallback(() => {
@@ -330,6 +359,7 @@ export function useSpeechRecognition(
   return {
     isSupported,
     isListening,
+    isPreparing,
     isTranscribing,
     transcript,
     errorMessage,

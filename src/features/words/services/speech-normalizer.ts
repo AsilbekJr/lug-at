@@ -26,8 +26,11 @@ export async function normalizeSpeechWithAI(
   const prompt = lang === 'uz-UZ'
     ? `
 Siz o'zbek adabiy tili va nutqni tahrirlash bo'yicha eng kuchli AI mutaxassisisiz.
-Foydalanuvchi mikrofonga gapirdi, ammo ovozni matnga aylantiruvchi STT vositasi fonetik xatolar qilgan bo'lishi mumkin.
+Foydalanuvchi mikrofonga o'zbek tilida gapirdi, ammo brauzer yoki STT vositasi uni xato eshitib, fonetik xatolar qilgan yoki turkcha so'zlarga aylantirib yuborgan bo'lishi mumkin (masalan, Chrome Web Speech ba'zan o'zbekcha nutqni turkcha "eve gideceğim", "Te makmamı" kabi eshitadi).
+
 Masalan:
+- "Te makmamı eve gideceğim" -> "Maktabdan uyga ketaman"
+- "eve gideceğim" -> "uyga ketaman"
 - "sobuq" -> "sovuq"
 - "navo issiq" -> "havo issiq"
 - "ketvotti" -> "ketyapti"
@@ -39,8 +42,8 @@ Masalan:
 Kiritilgan xom matn: "${text}"
 
 Vazifangiz:
-Faqat va faqat tuzatilgan, to'g'ri o'zbek adabiy tilidagi matnni qaytaring.
-Hech qanday izoh, tushuntirish, qo'shtirnoq yoki belgi qo'shmang. Faqat to'g'irlangan sof matnni chiqaring.
+Foydalanuvchi aslida nima demoqchi bo'lganini kontekst bo'yicha tiklab, faqat va faqat to'g'ri o'zbek adabiy tilidagi matnni qaytaring.
+Hech qanday izoh, tushuntirish, qo'shtirnoq yoki qo'shimcha so'z qo'shmang. Faqat to'g'irlangan sof matnni chiqaring.
 `
     : `
 You are an expert English speech transcript post-editor.

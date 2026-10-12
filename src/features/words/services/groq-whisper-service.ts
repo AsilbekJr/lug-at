@@ -49,7 +49,7 @@ export async function transcribeAudioWithGroq(
   // Provide initial vocabulary prompt to hint Uzbek names and terms
   const prompt =
     options.prompt ||
-    'O‘zbekcha nutq: havo issiq, yaxshi, sabr-toqat, mehnatsiz, til o‘rganish, salom, kitob, talaba, yuguraman.';
+    'O‘zbek adabiy tili (lotin alifbosi): Maktabdan uyga ketaman. Havo judayam sovuq. Kitob o‘qiyapman. Uyga boraman. Dars qilaman. Bugun ob-havo yaxshi. Salom, rahmat. Ingliz tilini o‘rganmoqdaman.';
   formData.append('prompt', prompt);
 
   const response = await fetch(GROQ_API_URL, {

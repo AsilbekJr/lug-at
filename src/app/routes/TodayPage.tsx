@@ -48,6 +48,7 @@ export function TodayPage() {
 
   const {
     isListening,
+    isPreparing,
     isTranscribing,
     isSupported: isMicSupported,
     lang: micLang,
@@ -61,6 +62,18 @@ export function TodayPage() {
       setQuickWord(spokenWord);
     },
   });
+
+  const handleMicClick = () => {
+    if (isListening || isPreparing) {
+      stopListening();
+    } else {
+      if (!hasGroqKey) {
+        setIsGroqModalOpen(true);
+        return;
+      }
+      startListening();
+    }
+  };
 
   const handleQuickAdd = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -281,20 +294,24 @@ export function TodayPage() {
                 {isMicSupported && (
                   <button
                     type="button"
-                    onClick={isListening ? stopListening : startListening}
+                    onClick={handleMicClick}
                     aria-label={isListening ? 'Ovoz yozishni to‘xtatish' : 'Ovoz orqali kiritish'}
                     title={
-                      isListening
+                      isPreparing
+                        ? 'Mikrofon faollashmoqda...'
+                        : isListening
                         ? 'Tinglanmoqda... To‘xtatish uchun bosing'
                         : `Ovoz orqali aytish (${micLang === 'uz-UZ' ? 'O‘zbekcha' : 'English'})`
                     }
                     className={`h-10 w-10 rounded-[5px] flex items-center justify-center transition-all ${
                       isListening
-                        ? 'bg-accent text-white animate-pulse shadow-xs'
+                        ? 'bg-rose-600 text-white animate-pulse shadow-md ring-2 ring-rose-400'
+                        : isPreparing
+                        ? 'bg-amber-500 text-white animate-pulse'
                         : 'text-ink-muted hover:text-accent hover:bg-surface-elevated'
                     }`}
                   >
-                    {isListening ? (
+                    {isListening || isPreparing ? (
                       <MicOff className="w-4 h-4" strokeWidth={1.8} />
                     ) : (
                       <Mic className="w-4 h-4" strokeWidth={1.8} />
@@ -316,21 +333,32 @@ export function TodayPage() {
               </div>
             </div>
 
-            {/* Listening indicator or error message */}
+            {/* Preparing indicator */}
+            {isPreparing && (
+              <div className="flex items-center gap-2 text-xs font-mono text-amber-600 dark:text-amber-400 animate-pulse px-1 pt-1">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                <span>🎙️ Mikrofon faollashmoqda, tayyorlaning...</span>
+              </div>
+            )}
+
+            {/* Listening indicator */}
             {isListening && (
-              <div className="flex items-center gap-2 text-xs font-mono text-accent animate-pulse px-1 pt-1">
-                <span className="w-2 h-2 rounded-full bg-accent" />
+              <div className="flex items-center gap-2 text-xs font-mono text-rose-600 dark:text-rose-400 font-semibold px-1 pt-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
                 <span>
-                  {hasGroqKey ? '⚡ Groq yozib olmoqda' : 'Tinglanmoqda'} ({micLang === 'uz-UZ' ? 'O‘zbekcha' : 'Inglizcha'})... Gapirib bo‘lgach tugmani yana bosing
+                  🔴 {hasGroqKey ? 'Groq Whisper yozmoqda' : 'Tinglanmoqda'} ({micLang === 'uz-UZ' ? 'O‘zbekcha' : 'Inglizcha'}): Hozir gapiring! Tugatgach yana bosing
                 </span>
               </div>
             )}
+
+            {/* Transcribing indicator */}
             {isTranscribing && (
               <div className="flex items-center gap-2 text-xs font-mono text-emerald-600 dark:text-emerald-400 px-1 pt-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                <span>Groq Whisper audio tahlil qilmoqda...</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-spin" />
+                <span>⚡ Nutq aniqlanmoqda va o‘zbek adabiy tiliga tekshirilmoqda...</span>
               </div>
             )}
+
             {micError && (
               <div className="text-xs text-rose-600 dark:text-rose-400 px-1 pt-0.5">
                 {micError}
