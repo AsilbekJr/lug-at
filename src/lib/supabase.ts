@@ -385,17 +385,21 @@ export const dataRepository = {
     if (isSupabaseConfigured && supabase) {
       const { data: userWords, error: uwErr } = await supabase
         .from('user_words')
-        .select('*, words(*), word_cards(*)')
+        .select('*, words(*, word_cards(*))')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (uwErr) throw new Error(`So'zlar yuklanmadi: ${uwErr.message}`);
 
-      return (userWords || []).map((row: any) => ({
-        userWord: row,
-        word: row.words,
-        card: row.word_cards,
-      }));
+      return (userWords || [])
+        .filter((row: any) => Boolean(row.words))
+        .map((row: any) => ({
+          userWord: row,
+          word: row.words,
+          card: Array.isArray(row.words?.word_cards)
+            ? row.words.word_cards[0]
+            : row.words?.word_cards,
+        }));
     }
 
     const words = getLocalData<Word[]>(STORAGE_KEYS.WORDS, INITIAL_WORDS);
