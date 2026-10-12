@@ -126,6 +126,7 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
         active_sentence: intervalSentence.text,
         active_sentence_label: intervalSentence.label,
         previous_mnemonic_type: currentItem.userWord.chosen_mnemonic?.type,
+        uz_meaning: currentItem.word.uz_meaning,
       });
 
       set({

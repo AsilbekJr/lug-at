@@ -188,7 +188,8 @@ export const aiCoachApi = {
       input.previous_mnemonic_type,
       input.active_sentence,
       input.active_sentence_label,
-      input.interval
+      input.interval,
+      input.uz_meaning
     );
   },
 };
@@ -196,6 +197,7 @@ export const aiCoachApi = {
 export interface ReviewParamInput {
   word: string;
   stage: 1 | 2 | 3 | 4 | 5;
+  uz_meaning?: string;
   lapses?: number;
   interval?: number;
   active_sentence?: string;
@@ -394,6 +396,40 @@ function generateFallbackCheckReply(
   };
 }
 
+const UZ_DISTRACTORS_POOL: string[] = [
+  'Quyoshli va ochiq havo',
+  'Kuchli shamol va bo‘ron',
+  'Qorli qish kuni',
+  'Issiq yoz fasli',
+  'Matonat va chidamlilik',
+  'Mayda detallarga e’tiborli',
+  'O‘tkinchi, qisqa umr ko‘ruvchi',
+  'Ta’sirchan va fasih so‘zlay oladigan',
+  'Kutilmagan baxtli tasodif',
+  'Yangi do‘stlar orttirish',
+  'Vaqtni unumli rejalashtirish',
+  'Qiyin vaziyatdan chiqish yo‘li',
+  'Kundalik odat va mashg‘ulot',
+  'Ishonchli va sodiq hamkor',
+  'Katta maqsadlarga erishish',
+  'Oila davrasida hordiq chiqarish',
+];
+
+function generateFourOptions(correctUz: string): { answer: string; options: string[] } {
+  const cleanCorrect = correctUz.trim();
+  const distractors = UZ_DISTRACTORS_POOL.filter(
+    (d) => d.toLowerCase() !== cleanCorrect.toLowerCase()
+  );
+
+  const picked = [...distractors].sort(() => 0.5 - Math.random()).slice(0, 3);
+  const allFour = [cleanCorrect, ...picked].sort(() => 0.5 - Math.random());
+
+  return {
+    answer: cleanCorrect,
+    options: allFour,
+  };
+}
+
 function generateFallbackReviewExercise(
   rawWord: string,
   stage: 1 | 2 | 3 | 4 | 5,
@@ -401,7 +437,8 @@ function generateFallbackReviewExercise(
   previousMnemonicType?: 'sound' | 'image' | 'root',
   activeSentence?: string,
   activeSentenceLabel?: string,
-  interval?: number
+  interval?: number,
+  uz_meaning?: string
 ): ReviewOutput {
   const word = rawWord.toLowerCase();
 
@@ -445,22 +482,20 @@ function generateFallbackReviewExercise(
       : activeSentence.replace(word, '___');
 
     switch (stage) {
-      case 1:
+      case 1: {
+        const correctMeaning = uz_meaning?.trim() || `${word} so‘zi ma’nosi`;
+        const { answer, options } = generateFourOptions(correctMeaning);
         return {
           type: 'choose',
           prompt: activeSentence,
           audio_text: activeSentence,
-          answer: `${word.toUpperCase()} so‘zi ma’nosi`,
-          options: [
-            `${word.toUpperCase()} so‘zi to‘g‘ri ma’nosi`,
-            'Qarama-qarshi noto‘g‘ri ma’no',
-            'Chalg‘ituvchi boshqa tushuncha',
-            'Tasodifiy noaniq tarjima',
-          ],
-          accept_also: [word],
+          answer,
+          options,
+          accept_also: [word, word.toLowerCase(), correctMeaning],
           new_mnemonic,
           interval_info,
         };
+      }
       case 2:
         return {
           type: 'dictation',
@@ -636,21 +671,19 @@ function generateFallbackReviewExercise(
 
   // Generic fallback generator for any vocabulary word
   switch (stage) {
-    case 1:
+    case 1: {
+      const correctMeaning = uz_meaning?.trim() || `${word} so‘zi ma’nosi`;
+      const { answer, options } = generateFourOptions(correctMeaning);
       return {
         type: 'choose',
         prompt: `It is vital to understand the concept of ${word} in modern society.`,
         audio_text: `It is vital to understand the concept of ${word} in modern society.`,
-        answer: `${word.toUpperCase()} tushunchasi va ma’nosi`,
-        options: [
-          `${word.toUpperCase()} tushunchasi va ma’nosi`,
-          'Qarama-qarshi noto‘g‘ri ma’no',
-          'Chalg‘ituvchi boshqa tushuncha',
-          'Vaqtinchalik holat',
-        ],
-        accept_also: [],
+        answer,
+        options,
+        accept_also: [word, word.toLowerCase(), correctMeaning],
         new_mnemonic,
       };
+    }
     case 2:
       return {
         type: 'dictation',
