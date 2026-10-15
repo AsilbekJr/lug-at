@@ -10,8 +10,10 @@ export default defineConfig({
     tailwindcss(),
   ],
   resolve: {
-    alias: {
-      '@': path.resolve(process.cwd(), './src'),
-    },
+    alias: [
+      { find: '@', replacement: path.resolve(process.cwd(), './src') },
+      // One WASM-only runtime for VAD; avoid bundling WebGPU/WebGL and duplicate runtimes.
+      { find: /^onnxruntime-web(?:\/wasm)?$/, replacement: path.resolve(process.cwd(), 'node_modules/onnxruntime-web/dist/ort.wasm.min.mjs') },
+    ],
   },
 });

@@ -13,12 +13,11 @@ export const ChooseExercise: React.FC = () => {
     isCorrect,
   } = useReviewSessionStore();
 
-  if (!currentExercise || currentExercise.type !== 'choose') return null;
-
-  const options = currentExercise.options || [];
+  const options = currentExercise?.options || [];
 
   // Hotkeys [1]..[4]
   React.useEffect(() => {
+    if (currentExercise?.type !== 'choose') return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnswerSubmitted) return;
       if (['1', '2', '3', '4'].includes(e.key)) {
@@ -33,7 +32,9 @@ export const ChooseExercise: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAnswerSubmitted, options.length, selectOption, selectedOptionIndex, submitAnswer]);
+  }, [currentExercise?.type, isAnswerSubmitted, options.length, selectOption, selectedOptionIndex, submitAnswer]);
+
+  if (!currentExercise || currentExercise.type !== 'choose') return null;
 
   return (
     <div className="space-y-6 text-left">

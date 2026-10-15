@@ -25,7 +25,7 @@ function AppLayout() {
     <div className="min-h-screen bg-paper text-ink flex flex-col font-sans selection:bg-accent-subtle selection:text-ink">
       <Header onOpenAddWord={() => setIsAddWordOpen(true)} />
       
-      <main className="flex-1 pb-24 sm:pb-16">
+      <main className="flex-1 mobile-nav-content lg:pb-16">
         <Routes>
           <Route path="/" element={<TodayPage />} />
           <Route path="/words" element={<WordsPage />} />

@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-client';
 import { useDueUserWordsQuery } from '@/features/words/api/words-api';
 import { useReviewSessionStore } from '@/features/review/store/useReviewSessionStore';
 import { dataRepository } from '@/lib/supabase';
@@ -19,6 +22,11 @@ import { CheckCircle2, Eye, Headphones, PenLine, Mic, Sparkles } from 'lucide-re
 import type { Rating } from 'ts-fsrs';
 
 export function ReviewPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const lastRating = React.useRef<Rating | null>(null);
+  const [isRestarting, setIsRestarting] = React.useState(false);
+  const [restartError, setRestartError] = React.useState<string | null>(null);
   const { data: dueItems, isLoading, isError, error, refetch } = useDueUserWordsQuery();
 
   const {
@@ -27,6 +35,8 @@ export function ReviewPage() {
     currentExercise,
     activeIntervalSentence,
     isLoadingExercise,
+    isSavingReview,
+    saveError,
     isAnswerSubmitted,
     showNewMnemonic,
     activeRescueMnemonic,
@@ -55,9 +65,33 @@ export function ReviewPage() {
 
   // Handle rating submission
   const handleRate = async (rating: Rating) => {
+    if (useReviewSessionStore.getState().isSavingReview) return;
+    lastRating.current = rating;
     await rateCard(rating, async (userWordId, updatedFields, logData) => {
       await dataRepository.updateUserWordReview(userWordId, updatedFields, logData);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.words.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.review.dueCards() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.review.logs() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.stats.summary() }),
+      ]);
     });
+  };
+
+  const handleRestart = async () => {
+    if (isRestarting) return;
+    setIsRestarting(true);
+    setRestartError(null);
+    try {
+      const fresh = await refetch();
+      if (fresh.isError) throw fresh.error;
+      if (fresh.data?.length) initSession(fresh.data);
+      else resetSession();
+    } catch (err) {
+      setRestartError(err instanceof Error ? err.message : 'Navbatni yangilab bo‘lmadi. Qaytadan urinib ko‘ring.');
+    } finally {
+      setIsRestarting(false);
+    }
   };
 
   if (isLoading) {
@@ -75,7 +109,7 @@ export function ReviewPage() {
     );
   }
 
-  if (isError) {
+  if (isError && cards.length === 0 && !isCompleted) {
     return (
       <div className="max-w-xl mx-auto px-4 py-8">
         <ErrorAlert
@@ -94,15 +128,10 @@ export function ReviewPage() {
         <ReviewSummary
           totalReviewed={sessionStats.totalReviewed}
           sessionStats={sessionStats}
-          onRestart={() => {
-            if (dueItems && dueItems.length > 0) {
-              initSession(dueItems);
-            } else {
-              resetSession();
-              refetch();
-            }
-          }}
+          onRestart={handleRestart}
+          isRestarting={isRestarting}
         />
+        {restartError && <ErrorAlert title="Navbat yangilanmadi" message={restartError} onRetry={handleRestart} />}
       </div>
     );
   }
@@ -116,15 +145,14 @@ export function ReviewPage() {
           title="Barcha navbatdagi so'zlar takrorlandi"
           description="Ajoyib natija! Bugun uchun takrorlanishi kerak bo'lgan boshqa so'z qolmadi. FSRS algoritmi keyingi muddatni belgiladi."
           actionLabel="Lug'at bankiga o'tish"
-          onAction={() => {
-            window.location.href = '/';
-          }}
+          onAction={() => navigate('/words')}
         />
       </div>
     );
   }
 
   const userWord = currentItem.userWord;
+  const showTarget = isAnswerSubmitted || currentExercise?.type === 'choose' || currentExercise?.type === 'conversation';
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
@@ -136,10 +164,10 @@ export function ReviewPage() {
               {currentIndex + 1} / {cards.length}
             </span>
             <span className="text-[var(--color-border)]">|</span>
-            <span className="font-serif font-medium text-[var(--color-text)] text-sm">
-              {currentItem.word.word}
+            <span className="font-serif font-medium text-[var(--color-text)] text-sm break-words min-w-0">
+              {showTarget ? currentItem.word.word : 'Eslab ko‘ring'}
             </span>
-            {currentItem.word.ipa && (
+            {showTarget && currentItem.word.ipa && (
               <span className="font-mono text-xs text-[var(--color-text-muted)] hidden sm:inline">
                 {currentItem.word.ipa}
               </span>
@@ -209,7 +237,7 @@ export function ReviewPage() {
         {!isLoadingExercise && currentExercise && (
           <div>
             {/* Interval & Context Sentence Tracker */}
-            {activeIntervalSentence && (
+            {activeIntervalSentence && isAnswerSubmitted && (
               <div className="flex items-center justify-between gap-2 p-2.5 mb-5 rounded-md bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-xs font-mono text-[var(--color-text-muted)] flex-wrap">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
@@ -234,7 +262,7 @@ export function ReviewPage() {
       </div>
 
       {/* Rescue Mnemonic (Lapses >= 2) */}
-      {showNewMnemonic && activeRescueMnemonic && (
+      {isAnswerSubmitted && showNewMnemonic && activeRescueMnemonic && (
         <NewMnemonicCard
           mnemonic={activeRescueMnemonic}
           onDismiss={dismissRescueMnemonic}
@@ -243,12 +271,20 @@ export function ReviewPage() {
 
       {/* FSRS Rating Bar (Visible once user submits answer) */}
       <div className="min-h-[72px]">
+        {saveError && (
+          <ErrorAlert
+            title="Takrorlash saqlanmadi"
+            message={saveError}
+            onRetry={() => lastRating.current !== null && handleRate(lastRating.current)}
+          />
+        )}
+        {isSavingReview && <p role="status" className="text-sm text-ink-muted text-center py-2">Natija saqlanmoqda...</p>}
         {isAnswerSubmitted ? (
           <div className="space-y-1.5 animate-fadeIn">
             <span className="text-xs font-mono text-[var(--color-text-muted)] block text-center">
               Eslab qolish darajangizni baholang [1..4]:
             </span>
-            <RatingBar previews={previews} onRate={handleRate} />
+            <RatingBar previews={previews} onRate={handleRate} disabled={isSavingReview} />
           </div>
         ) : (
           <p className="text-xs text-[var(--color-text-muted)] text-center py-2">

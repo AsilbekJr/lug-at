@@ -56,9 +56,9 @@ export function useMarkWordAsKnownMutation() {
         uz_meaning: curated.translation,
         is_known: true,
         recog_ok: true,
-        listen_ok: true,
-        write_ok: true,
-        speak_ok: true,
+        listen_ok: false,
+        write_ok: false,
+        speak_ok: false,
         cardContent: {
           word: cleanWord,
           pos: curated.partOfSpeech || 'noun',
@@ -71,7 +71,7 @@ export function useMarkWordAsKnownMutation() {
             past: `I understood ${cleanWord}.`,
             future: `I know ${cleanWord}.`,
           },
-          personal_prompt_uz: 'Allaqachon o‘zlashtirilgan so‘z.',
+          personal_prompt_uz: 'O‘quvchi bu so‘zni bilishini o‘zi belgilagan. Boshqa ko‘nikmalar hali tekshirilmagan.',
           cefr_level: (curated.cefr as any) || 'A1',
         },
       };

@@ -505,12 +505,24 @@ function generateFallbackReviewExercise(
           accept_also: [
             activeSentence.replace(/[.,!?;:]/g, ''),
             activeSentence.trim(),
-            word,
           ],
           new_mnemonic,
           interval_info,
         };
       case 3:
+        // Without a verified Uzbek sentence, ask for the known Uzbek meaning.
+        // The learner must be able to answer without seeing the English context.
+        if (uz_meaning?.trim()) {
+          return {
+            type: 'uz_to_en',
+            prompt: `Inglizchaga tarjima qiling: ${uz_meaning.trim()}`,
+            audio_text: '',
+            answer: word,
+            accept_also: [],
+            new_mnemonic,
+            interval_info,
+          };
+        }
         return {
           type: 'uz_to_en',
           prompt: `Ushbu intervaldagi gapni ingliz tilida tiklang (${activeSentenceLabel || 'kontekst'}):`,

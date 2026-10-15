@@ -341,20 +341,24 @@ function setLocalData<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    console.warn('LocalStorage saqlashda xatolik:', err);
+    throw new Error('Qurilmaga saqlab bo‘lmadi. Xotira yoki brauzer ruxsatlarini tekshirib, qaytadan urinib ko‘ring.', { cause: err });
   }
 }
 
 // Seed local storage for offline preview
 if (typeof window !== 'undefined') {
-  if (!localStorage.getItem(STORAGE_KEYS.WORDS)) {
-    setLocalData(STORAGE_KEYS.WORDS, INITIAL_WORDS);
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.WORD_CARDS)) {
-    setLocalData(STORAGE_KEYS.WORD_CARDS, INITIAL_WORD_CARDS);
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.USER_WORDS)) {
-    setLocalData(STORAGE_KEYS.USER_WORDS, INITIAL_USER_WORDS);
+  try {
+    if (!localStorage.getItem(STORAGE_KEYS.WORDS)) {
+      setLocalData(STORAGE_KEYS.WORDS, INITIAL_WORDS);
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.WORD_CARDS)) {
+      setLocalData(STORAGE_KEYS.WORD_CARDS, INITIAL_WORD_CARDS);
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.USER_WORDS)) {
+      setLocalData(STORAGE_KEYS.USER_WORDS, INITIAL_USER_WORDS);
+    }
+  } catch {
+    // Demo data remains readable from in-memory fallbacks. User saves still reject.
   }
 }
 
@@ -487,10 +491,10 @@ export const dataRepository = {
       reps: isKnown ? 1 : 0,
       lapses: 0,
       last_review: isKnown ? now : null,
-      recog_ok: input.recog_ok ?? true,
-      listen_ok: input.listen_ok ?? true,
-      write_ok: input.write_ok ?? true,
-      speak_ok: input.speak_ok ?? true,
+      recog_ok: input.recog_ok ?? false,
+      listen_ok: input.listen_ok ?? false,
+      write_ok: input.write_ok ?? false,
+      speak_ok: input.speak_ok ?? false,
       created_at: now,
       updated_at: now,
     };

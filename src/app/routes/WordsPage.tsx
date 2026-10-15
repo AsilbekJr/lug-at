@@ -3,7 +3,6 @@ import { useUserWordsQuery, useDeleteUserWordMutation } from '@/features/words/a
 import { WordCard } from '@/features/words/components/WordCard';
 import { WordFilters } from '@/features/words/components/WordFilters';
 import { WordDetailDialog } from '@/features/words/components/WordDetailDialog';
-import { AddWordStepperModal } from '@/features/words/components/stepper/AddWordStepperModal';
 import { CuratedVocabModal } from '@/features/words/components/curriculum/CuratedVocabModal';
 import { useAddWordStepperStore } from '@/features/words/store/useAddWordStepper';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -185,9 +184,6 @@ export function WordsPage() {
         onDelete={(id) => deleteMutation.mutate(id)}
         isDeleting={deleteMutation.isPending}
       />
-
-      {/* 4-Step Single Column Add Word Stepper Modal */}
-      <AddWordStepperModal />
 
       {/* Curated Vocabulary Catalog Modal */}
       <CuratedVocabModal

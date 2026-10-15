@@ -27,7 +27,7 @@ export const StepperHeader: React.FC<StepperHeaderProps> = ({ currentStep, onSte
       </div>
 
       {/* Steps indicator */}
-      <div className="flex items-center justify-between gap-1 text-xs">
+      <div className="flex items-center justify-between gap-2 text-xs">
         {STEPS.map((s) => {
           const isActive = s.step === currentStep;
           const isDone = s.step < currentStep;
@@ -38,7 +38,7 @@ export const StepperHeader: React.FC<StepperHeaderProps> = ({ currentStep, onSte
               type="button"
               disabled={!isDone && !isActive}
               onClick={() => isDone && onStepClick?.(s.step)}
-              className={`flex-1 text-left px-1.5 py-1 rounded transition-colors ${
+              className={`min-h-[44px] min-w-[44px] flex-1 text-left px-1.5 py-1 rounded transition-colors ${
                 isActive
                   ? 'text-[var(--color-accent)] font-semibold'
                   : isDone

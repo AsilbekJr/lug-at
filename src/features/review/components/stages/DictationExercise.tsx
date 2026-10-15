@@ -16,9 +16,9 @@ export const DictationExercise: React.FC = () => {
   } = useReviewSessionStore();
   const { speak, isSpeaking } = useSpeech();
 
-  if (!currentExercise || currentExercise.type !== 'dictation') return null;
-
-  const audioText = currentExercise.audio_text || currentExercise.answer;
+  const audioText = currentExercise?.type === 'dictation'
+    ? currentExercise.audio_text || currentExercise.answer
+    : '';
 
   const [speed, setSpeed] = React.useState<number>(1.0);
   const speedRef = React.useRef(speed);
@@ -43,6 +43,7 @@ export const DictationExercise: React.FC = () => {
 
   // Spacebar keydown listener
   React.useEffect(() => {
+    if (!audioText) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         e.code === 'Space' &&
@@ -54,7 +55,9 @@ export const DictationExercise: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [playAudio]);
+  }, [audioText, playAudio]);
+
+  if (!currentExercise || currentExercise.type !== 'dictation') return null;
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();

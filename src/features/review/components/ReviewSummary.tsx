@@ -13,9 +13,10 @@ export interface ReviewSummaryProps {
   };
   ratings?: { userWordId: string; rating: Rating }[];
   onRestart: () => void;
+  isRestarting?: boolean;
 }
 
-export function ReviewSummary({ totalReviewed, ratings = [], sessionStats, onRestart }: ReviewSummaryProps) {
+export function ReviewSummary({ totalReviewed, ratings = [], sessionStats, onRestart, isRestarting }: ReviewSummaryProps) {
   const counts = sessionStats
     ? {
         [Rating.Again]: sessionStats.againCount,
@@ -85,11 +86,11 @@ export function ReviewSummary({ totalReviewed, ratings = [], sessionStats, onRes
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-2.5 justify-center pt-2">
-        <Button variant="secondary" size="md" onClick={onRestart}>
+        <Button variant="secondary" size="md" onClick={onRestart} disabled={isRestarting}>
           <RotateCcw className="w-4 h-4 mr-2" strokeWidth={1.5} />
-          Qayta takrorlash
+          {isRestarting ? 'Navbat yangilanmoqda...' : 'Qayta takrorlash'}
         </Button>
-        <Link to="/" className="w-full sm:w-auto">
+        <Link to="/words" className="w-full sm:w-auto">
           <Button variant="accent" size="md" className="w-full">
             <BookOpen className="w-4 h-4 mr-2" strokeWidth={1.5} />
             Lug'atga o'tish

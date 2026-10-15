@@ -113,7 +113,7 @@ export function WordDetailDialog({
                 type="button"
                 onClick={handleSpeak}
                 aria-label="Talaffuzni tinglash"
-                className={`p-1 rounded text-ink-muted hover:text-accent transition-colors ${
+                className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded text-ink-muted hover:text-accent transition-colors ${
                   isSpeaking ? 'text-accent' : ''
                 }`}
               >
@@ -330,19 +330,19 @@ export function WordDetailDialog({
                   onOpenChange(false);
                 }
               }}
-              className="text-rating-again border-rating-again/30 hover:bg-rating-again/10 text-xs h-9 min-h-[36px]"
+              className="text-rating-again border-rating-again/30 hover:bg-rating-again/10 text-xs h-9"
             >
               <Trash2 className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
               O‘chirish
             </Button>
           )}
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleRereview}
-              className="text-xs h-9 min-h-[36px]"
+              className="text-xs h-9"
             >
               <Sparkles className="w-3.5 h-3.5 mr-1 text-accent" strokeWidth={1.5} />
               <span className="hidden sm:inline">Qayta o‘rganish</span>
@@ -352,7 +352,7 @@ export function WordDetailDialog({
               variant="secondary"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="text-xs h-9 min-h-[36px]"
+              className="text-xs h-9"
             >
               Yopish
             </Button>

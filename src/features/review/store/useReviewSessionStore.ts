@@ -20,6 +20,8 @@ export interface ReviewSessionState {
   currentExercise: ReviewOutput | null;
   activeIntervalSentence: IntervalSentenceInfo | null;
   isLoadingExercise: boolean;
+  isSavingReview: boolean;
+  saveError: string | null;
   userAnswer: string;
   selectedOptionIndex: number | null;
   isAnswerSubmitted: boolean;
@@ -61,6 +63,8 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
   currentExercise: null,
   activeIntervalSentence: null,
   isLoadingExercise: false,
+  isSavingReview: false,
+  saveError: null,
   userAnswer: '',
   selectedOptionIndex: null,
   isAnswerSubmitted: false,
@@ -77,6 +81,8 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
       currentExercise: null,
       activeIntervalSentence: null,
       isLoadingExercise: false,
+      isSavingReview: false,
+      saveError: null,
       userAnswer: '',
       selectedOptionIndex: null,
       isAnswerSubmitted: false,
@@ -102,6 +108,7 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
 
     set({
       isLoadingExercise: true,
+      currentExercise: null,
       userAnswer: '',
       selectedOptionIndex: null,
       isAnswerSubmitted: false,
@@ -129,6 +136,9 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
         uz_meaning: currentItem.word.uz_meaning,
       });
 
+      // A late response must not replace a restarted/reset session.
+      if (get().cards !== cards || get().currentIndex !== currentIndex) return;
+
       set({
         currentExercise: exercise,
         activeIntervalSentence: intervalSentence,
@@ -137,6 +147,7 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
         showNewMnemonic: (currentItem.userWord.lapses || 0) >= 2 && Boolean(exercise.new_mnemonic),
       });
     } catch (err) {
+      if (get().cards !== cards || get().currentIndex !== currentIndex) return;
       console.error('Failed to load review exercise:', err);
       set({ isLoadingExercise: false });
     }
@@ -196,9 +207,12 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
   },
 
   rateCard: async (rating: Rating, saveReview) => {
-    const { cards, currentIndex, currentExercise, sessionStats, activeRescueMnemonic } = get();
+    const {
+      cards, currentIndex, currentExercise, sessionStats, activeRescueMnemonic,
+      isSavingReview, isAnswerSubmitted, isCorrect,
+    } = get();
     const currentItem = cards[currentIndex];
-    if (!currentItem) return;
+    if (!currentItem || !currentExercise || !isAnswerSubmitted || isSavingReview) return;
 
     // 1. Calculate next FSRS scheduling
     const now = new Date();
@@ -211,17 +225,19 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
     const nextCard = scheduledItem.card;
 
     // 2. Update mastery indicators according to task type
-    const taskType = currentExercise?.type || 'choose';
+    const taskType = currentExercise.type;
     const masteryUpdates: Partial<UserWord> = {};
+    const mastered = isCorrect === true && rating !== Rating.Again;
 
-    if (taskType === 'choose') masteryUpdates.recog_ok = true;
-    if (taskType === 'dictation') masteryUpdates.listen_ok = true;
-    if (taskType === 'uz_to_en') masteryUpdates.write_ok = true;
+    if (taskType === 'choose') masteryUpdates.recog_ok = mastered;
+    if (taskType === 'dictation') masteryUpdates.listen_ok = mastered;
+    if (taskType === 'uz_to_en') masteryUpdates.write_ok = mastered;
     if (taskType === 'gap_fill') {
-      masteryUpdates.write_ok = true;
-      masteryUpdates.recog_ok = true;
+      masteryUpdates.write_ok = mastered;
+      masteryUpdates.recog_ok = mastered;
     }
-    if (taskType === 'conversation') masteryUpdates.speak_ok = true;
+    // A text reply demonstrates writing, not verified pronunciation.
+    if (taskType === 'conversation') masteryUpdates.write_ok = mastered;
 
     // If again or lapses >= 2 and rescue mnemonic chosen, save it
     if (rating === Rating.Again && activeRescueMnemonic) {
@@ -248,26 +264,39 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
       easyCount: sessionStats.easyCount + (rating === Rating.Easy ? 1 : 0),
     };
 
-    // 4. Optimistic UI Advance
+    // Keep the answer and card until persistence has succeeded.
+    set({ isSavingReview: true, saveError: null });
+    try {
+      await saveReview(currentItem.userWord.id, updatedFields, { task_type: taskType, rating });
+    } catch (err) {
+      if (get().cards === cards && get().currentIndex === currentIndex) {
+        set({
+          isSavingReview: false,
+          saveError: err instanceof Error ? err.message : 'Takrorlash saqlanmadi. Qaytadan urinib ko‘ring.',
+        });
+      }
+      return;
+    }
+    if (get().cards !== cards || get().currentIndex !== currentIndex) return;
+
     const nextIndex = currentIndex + 1;
     const isCompleted = nextIndex >= cards.length;
 
     set({
+      cards: cards.map((item, index) => index === currentIndex
+        ? { ...item, userWord: { ...item.userWord, ...updatedFields } }
+        : item),
       currentIndex: nextIndex,
       isCompleted,
+      isSavingReview: false,
+      saveError: null,
       sessionStats: newStats,
+      currentExercise: null,
+      activeIntervalSentence: null,
       userAnswer: '',
       selectedOptionIndex: null,
       isAnswerSubmitted: false,
       isCorrect: null,
-    });
-
-    // 5. Fire async background write
-    saveReview(currentItem.userWord.id, updatedFields, {
-      task_type: taskType,
-      rating,
-    }).catch((err) => {
-      console.error('Optimistic review save failed in background:', err);
     });
 
     // If more cards exist, load next exercise
@@ -287,6 +316,8 @@ export const useReviewSessionStore = create<ReviewSessionState>((set, get) => ({
       currentExercise: null,
       activeIntervalSentence: null,
       isLoadingExercise: false,
+      isSavingReview: false,
+      saveError: null,
       userAnswer: '',
       selectedOptionIndex: null,
       isAnswerSubmitted: false,

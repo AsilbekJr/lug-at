@@ -12,7 +12,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       'inline-flex items-center justify-center font-sans font-medium transition-colors duration-150 rounded-[6px] select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:translate-y-[0.5px]';
 
     const sizeStyles = {
-      sm: 'h-8 px-3 text-xs gap-1.5 min-h-[36px]',
+      sm: 'h-8 px-3 text-xs gap-1.5 min-h-[44px] min-w-[44px] lg:min-h-[36px]',
       md: 'h-10 px-4 text-sm gap-2 min-h-[44px]',
       lg: 'h-12 px-6 text-base gap-2.5 min-h-[44px]',
       icon: 'h-10 w-10 min-h-[44px] min-w-[44px] p-0',

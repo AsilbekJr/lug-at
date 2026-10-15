@@ -52,7 +52,7 @@ export function Header({ onOpenAddWord }: HeaderProps) {
         {/* Brand */}
         <Link
           to="/"
-          className="flex items-baseline gap-2 group text-ink focus-visible:outline-none"
+          className="flex min-h-11 items-baseline gap-2 py-2 group text-ink"
         >
           <span className="font-serif font-bold text-xl sm:text-2xl tracking-tight text-ink group-hover:text-accent transition-colors">
             Linguist
@@ -63,7 +63,7 @@ export function Header({ onOpenAddWord }: HeaderProps) {
         </Link>
 
         {/* Navigation - Desktop */}
-        <nav className="hidden sm:flex items-center gap-1 sm:gap-2">
+        <nav aria-label="Asosiy navigatsiya" className="hidden lg:flex items-center gap-2">
           <NavLink
             to="/"
             end
@@ -131,16 +131,17 @@ export function Header({ onOpenAddWord }: HeaderProps) {
         </nav>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-2">
           {onOpenAddWord && (
             <Button
               variant="accent"
               size="sm"
               onClick={onOpenAddWord}
+              aria-label="Yangi so‘z qo‘shish"
               className="h-9 px-2.5 sm:px-3.5 text-xs sm:text-sm font-semibold flex items-center gap-1 shrink-0"
             >
               <Plus className="w-4 h-4" strokeWidth={1.8} />
-              <span className="hidden xs:inline">Yangi so‘z</span>
+              <span className="hidden sm:inline">Yangi so‘z</span>
             </Button>
           )}
 

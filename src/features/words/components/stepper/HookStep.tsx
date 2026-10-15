@@ -17,15 +17,14 @@ export const HookStep: React.FC = () => {
     setCustomMnemonicText,
   } = useAddWordStepperStore();
 
-  if (!cardData) return null;
-
   // Filter out null mnemonics as per requirement ("hide null ones")
-  const availableMnemonics = (cardData.mnemonics || []).filter(
+  const availableMnemonics = (cardData?.mnemonics || []).filter(
     (m): m is MnemonicItemOutput => m !== null
   );
 
   // Keyboard shortcut for [1], [2], [3]
   React.useEffect(() => {
+    if (!cardData) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isEditingMnemonic || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
@@ -39,7 +38,9 @@ export const HookStep: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [availableMnemonics.length, isEditingMnemonic, selectMnemonic]);
+  }, [cardData, availableMnemonics.length, isEditingMnemonic, selectMnemonic]);
+
+  if (!cardData) return null;
 
   const getMnemonicLabel = (m: MnemonicItemOutput) => {
     switch (m.type) {

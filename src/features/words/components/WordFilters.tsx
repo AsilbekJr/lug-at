@@ -64,7 +64,7 @@ export function WordFilters({
 
       {/* CEFR Level Pills */}
       <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {CEFR_OPTIONS.map((lvl) => {
             const isSelected = selectedCefr === lvl;
             return (
@@ -73,7 +73,7 @@ export function WordFilters({
                 type="button"
                 onClick={() => onCefrChange(lvl)}
                 className={cn(
-                  'px-3 py-1 text-xs rounded-[4px] border min-h-[36px] font-sans transition-colors cursor-pointer select-none',
+                  'px-3 py-1 text-xs rounded-[4px] border min-h-[44px] min-w-[44px] font-sans transition-colors cursor-pointer select-none',
                   isSelected
                     ? 'border-ink bg-ink text-paper font-semibold'
                     : 'border-border bg-paper text-ink-muted hover:text-ink hover:border-ink-muted'

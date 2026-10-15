@@ -25,4 +25,5 @@ dist-ssr
 !.env.example
 
 scratch/
+public/speech-vad/
 *.pdf

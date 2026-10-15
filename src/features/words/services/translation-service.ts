@@ -105,7 +105,6 @@ export function detectItemType(text: string): 'word' | 'sentence' {
   return 'word';
 }
 
-import { cleanSpokenTranscript } from './phonetic-corrections';
 import { translateWithGeminiFlash } from './gemini-flash-service';
 
 /**
@@ -142,8 +141,7 @@ export async function translateInput(
   rawText: string,
   forcedItemType?: 'word' | 'sentence'
 ): Promise<TranslationResult> {
-  const cleanedText = cleanSpokenTranscript(rawText);
-  const text = cleanedText.trim();
+  const text = rawText.trim();
   const itemType = forcedItemType || detectItemType(text);
   const isUz = isLikelyUzbek(text);
   const lower = text.toLowerCase();

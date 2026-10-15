@@ -91,7 +91,7 @@ export function WordCard({ item, onClick, className }: WordCardProps) {
             aria-label={`Talaffuz: ${word.word}`}
             onClick={handleSpeak}
             className={cn(
-              'p-2 rounded-[6px] text-ink-muted hover:text-ink hover:bg-paper-subtle min-h-[40px] min-w-[40px] flex items-center justify-center transition-colors',
+              'p-2 rounded-[6px] text-ink-muted hover:text-ink hover:bg-paper-subtle min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors',
               isPlayingAudio && 'text-accent'
             )}
           >

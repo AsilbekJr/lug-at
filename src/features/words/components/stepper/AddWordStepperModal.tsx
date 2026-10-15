@@ -4,6 +4,7 @@ import { useCreateWordMutation } from '@/features/words/api/words-api';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ErrorAlert } from '@/components/feedback/error-alert';
 import { StepperHeader } from './StepperHeader';
 import { HookStep } from './HookStep';
 import { ListenAndSayStep } from './ListenAndSayStep';
@@ -39,7 +40,11 @@ export const AddWordStepperModal: React.FC = () => {
 
   const createWordMutation = useCreateWordMutation();
   const [submittingFinal, setSubmittingFinal] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const submittingRef = React.useRef(false);
   const [entryMode, setEntryMode] = React.useState<'manual' | 'curated'>('manual');
+
+  React.useEffect(() => { setSaveError(null); }, [isOpen, cardData]);
 
   const handleStartFlow = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -49,8 +54,10 @@ export const AddWordStepperModal: React.FC = () => {
   };
 
   const handleFinalFinish = async () => {
-    if (!cardData) return;
+    if (!cardData || submittingRef.current) return;
+    submittingRef.current = true;
     setSubmittingFinal(true);
+    setSaveError(null);
 
     try {
       await createWordMutation.mutateAsync({
@@ -65,37 +72,45 @@ export const AddWordStepperModal: React.FC = () => {
           ...cardData,
           item_type: useAddWordStepperStore.getState().itemType,
         },
-        recog_ok: true,
-        listen_ok: listenConfirmed || true,
-        write_ok: Boolean(sentenceFeedback),
-        speak_ok: speakConfirmed || true,
+        recog_ok: false,
+        listen_ok: listenConfirmed,
+        write_ok: sentenceFeedback?.uses_word_correctly === true && sentenceFeedback.grammar_ok === true,
+        speak_ok: speakConfirmed,
       });
 
-      reset();
-      closeStepper();
+      if (useAddWordStepperStore.getState().cardData === cardData) {
+        reset();
+        closeStepper();
+      }
     } catch (err) {
-      console.error('So‘zni saqlashda xatolik:', err);
+      if (useAddWordStepperStore.getState().cardData === cardData) {
+        setSaveError(err instanceof Error ? err.message : 'So‘z saqlanmadi. Qaytadan urinib ko‘ring.');
+      }
     } finally {
+      submittingRef.current = false;
       setSubmittingFinal(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && closeStepper()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !submittingRef.current && closeStepper()}>
       <DialogContent
         className={`w-full p-4 sm:p-6 max-h-[90vh] flex flex-col overflow-hidden transition-all duration-150 ${
           !cardData && entryMode === 'curated' ? 'max-w-3xl' : 'max-w-xl'
         }`}
       >
+        {saveError && (
+          <ErrorAlert title="So‘z saqlanmadi" message={saveError} onRetry={handleFinalFinish} />
+        )}
         {/* State 1: Fresh Word Selection Screen */}
         {!cardData && !isLoadingCard && (
           <div className="flex flex-col h-full overflow-hidden space-y-4">
             {/* Mode Switcher Tabs */}
-            <div className="flex items-center p-1 bg-[var(--color-surface-subtle)] rounded-[6px] border border-[var(--color-border)] shrink-0 mr-10 sm:mr-12">
+            <div className="flex items-center gap-2 p-1 bg-[var(--color-surface-subtle)] rounded-[6px] border border-[var(--color-border)] shrink-0 mr-10 sm:mr-12">
               <button
                 type="button"
                 onClick={() => setEntryMode('manual')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-[4px] transition-colors ${
+                className={`min-h-[44px] min-w-0 flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-[4px] transition-colors ${
                   entryMode === 'manual'
                     ? 'bg-[var(--color-paper)] text-[var(--color-text)] shadow-xs'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -107,7 +122,7 @@ export const AddWordStepperModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEntryMode('curated')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-[4px] transition-colors ${
+                className={`min-h-[44px] min-w-0 flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-[4px] transition-colors ${
                   entryMode === 'curated'
                     ? 'bg-[var(--color-paper)] text-[var(--color-text)] shadow-xs'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -161,7 +176,7 @@ export const AddWordStepperModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setEntryMode('curated')}
-                      className="text-xs text-[var(--color-accent)] hover:underline inline-flex items-center gap-1 justify-center sm:justify-start"
+                      className="min-h-[44px] text-xs text-[var(--color-accent)] hover:underline inline-flex items-center gap-1 justify-center sm:justify-start"
                     >
                       <Layers className="w-3.5 h-3.5" />
                       Yoki tayyor mavzular to‘plamini ko‘ring
@@ -224,7 +239,7 @@ export const AddWordStepperModal: React.FC = () => {
         {cardData && !isLoadingCard && (
           <div className="flex flex-col flex-1 min-h-0">
             {/* Header */}
-            <StepperHeader currentStep={step} onStepClick={goToStep} />
+            <StepperHeader currentStep={step} onStepClick={(next) => { if (!submittingFinal) goToStep(next); }} />
 
             {/* Scrollable Step Body */}
             <div className="flex-1 overflow-y-auto py-4 px-2">
@@ -243,6 +258,7 @@ export const AddWordStepperModal: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={prevStep}
+                    disabled={submittingFinal}
                     className="text-xs"
                   >
                     <ArrowLeft className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />

@@ -47,7 +47,7 @@ export const CuratedWordCard: React.FC<CuratedWordCardProps> = ({
               type="button"
               onClick={handleSpeak}
               aria-label="Talaffuz qilish"
-              className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)] p-0.5 rounded transition-colors inline-flex items-center"
+              className="min-h-[44px] min-w-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] p-2 rounded transition-colors inline-flex items-center justify-center"
             >
               <Volume2 className={`w-3.5 h-3.5 ${isSpeaking ? 'text-[var(--color-accent)]' : ''}`} strokeWidth={1.5} />
             </button>
@@ -103,7 +103,7 @@ export const CuratedWordCard: React.FC<CuratedWordCardProps> = ({
           </span>
         )}
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 flex-wrap">
           {!isLearned && (
             <Button
               type="button"
@@ -112,14 +112,14 @@ export const CuratedWordCard: React.FC<CuratedWordCardProps> = ({
               onClick={handleMarkAsKnown}
               disabled={markAsKnownMutation.isPending}
               className="text-xs h-7 px-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              title="Bu so‘zni allaqachon bilaman (takrorlashga kiritmaslik)"
+              title="So‘zni bilishingizni o‘zingiz belgilaysiz. Tinglash, yozish va talaffuz hali tekshirilmagan."
             >
               {markAsKnownMutation.isPending ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
                 <>
                   <Check className="w-3 h-3 mr-1 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
-                  Bilaman
+                  O‘zim bilaman
                 </>
               )}
             </Button>

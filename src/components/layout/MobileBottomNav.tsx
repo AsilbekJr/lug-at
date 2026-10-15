@@ -45,7 +45,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobil navigatsiya"
-      className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-paper/95 backdrop-blur-md border-t border-border h-16 px-2 flex items-center justify-around safe-area-pb transition-colors shadow-xs"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-paper/95 backdrop-blur-md border-t border-border mobile-bottom-nav px-2 flex items-center justify-around gap-2 transition-colors shadow-xs"
     >
       {navItems.map((item) => {
         const Icon = item.icon;
